@@ -1,0 +1,6 @@
+{
+  "name": "Rakhi Coaching",
+  "description": "A high-performance Bento Grid educational ecosystem featuring courses, high-yield digital notes store, mock assessments, and an interactive student dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
