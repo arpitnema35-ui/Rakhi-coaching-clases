@@ -74,11 +74,7 @@ export async function testConnection(): Promise<boolean> {
     console.log("Firebase Connection verified successfully.");
     return true;
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Firebase is offline. Please check your network and configuration.");
-    } else {
-      console.warn("Firebase test connection warning (this is normal if the collection doesn't exist yet):", error);
-    }
+    console.warn("Firebase connection notice: operating in local fallback mode.", error);
     return false;
   }
 }

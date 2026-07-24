@@ -974,7 +974,7 @@ export default function PublicPages({
                     <MapPin size={14} className="text-indigo-400" />
                     <span>OUR OFFICE</span>
                   </div>
-                  <p>102, Shanti Vihar, Sector 4, Near City Plaza, India</p>
+                  <p>Main Road, Kudan, Katangi - 483105</p>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2 text-white font-bold">
@@ -985,11 +985,11 @@ export default function PublicPages({
                   <p className="text-[10px] text-slate-500">Available Mon-Sat (9 AM - 8 PM)</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-slate-950 dark:text-white font-bold">
-                    <Mail size={14} className="text-indigo-500" />
+                  <div className="flex items-center space-x-2 text-white font-bold">
+                    <Mail size={14} className="text-indigo-400" />
                     <span>EMAIL SUPPORT</span>
                   </div>
-                  <p>contact@rakhicoaching.com</p>
+                  <p className="text-slate-200 font-bold font-mono">arpitnema35@gmail.com</p>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2 text-slate-950 dark:text-white font-bold">

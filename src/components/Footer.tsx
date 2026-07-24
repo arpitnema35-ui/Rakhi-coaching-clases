@@ -104,7 +104,7 @@ export default function Footer({ setActiveTab }: FooterProps) {
             <h3 className="text-white font-semibold text-sm tracking-wider uppercase mb-1">Contact Support</h3>
             <div className="flex items-start space-x-2">
               <MapPin size={16} className="text-indigo-400 mt-0.5 shrink-0" />
-              <span>102, Shanti Vihar, Sector 4, Near City Plaza, India</span>
+              <span>Main Road, Kudan, Katangi - 483105</span>
             </div>
             <div className="flex items-center space-x-2">
               <Phone size={16} className="text-indigo-400 shrink-0" />
@@ -112,7 +112,7 @@ export default function Footer({ setActiveTab }: FooterProps) {
             </div>
             <div className="flex items-center space-x-2">
               <Mail size={16} className="text-indigo-400 shrink-0" />
-              <span>contact@rakhicoaching.com</span>
+              <span>arpitnema35@gmail.com</span>
             </div>
             <div className="pt-2 border-t border-slate-800 flex flex-col space-y-1 text-xs">
               <button onClick={() => setActiveTab('privacy')} className="text-left hover:text-white transition-colors cursor-pointer">
