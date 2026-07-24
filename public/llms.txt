@@ -1,0 +1,48 @@
+# Rakhi Coaching Classes — AI Context & Summary (llms.txt)
+
+> Rakhi Coaching Classes is a premier educational institute in India providing physical and digital classroom coaching, competitive exam preparation (JEE & NEET), downloadable high-yield PDF study notes, and online mock test series for Class 8th to 12th students.
+
+## Owner & Leadership
+- **Founder & Director:** Arpit Nema
+- **Institute Name:** Rakhi Coaching Classes
+- **Tagline:** Learn Smart, Score Better
+- **Location:** Main Road, Kudan, Katangi - 483105, Madhya Pradesh, India
+- **Contact Email:** arpitnema35@gmail.com
+- **Contact Phone:** +91 78289 08559
+- **Coverage:** All India online notes & test series,Katangi/Jabalpur offline classroom batches
+
+## Primary Offerings & Capabilities
+
+### 1. Classroom Coaching Batches
+- **Class 8th to 10th Foundation:** Mathematics, Science, Social Science, English (CBSE & MP Board).
+- **Class 11th & 12th Board Mastery:** Physics, Chemistry, Mathematics (PCM), Biology (PCB).
+- **JEE Mains & NEET Target Batches:** Concept vector lectures, daily practice problems (DPP), problem-solving sessions.
+
+### 2. Digital PDF Study Notes Store
+- High-yield chapter summaries, formula vectors, solved board paper banks, and revision mindmaps.
+- Instant PDF preview and download access.
+- Discount Coupon Code: `SCOREMAX` (Flat 20% OFF on orders above ₹200).
+
+### 3. Online MCQ Test Series
+- Real-time timed mock tests with instant score analysis and correct-answer explanations.
+- Auto-generated verifiable digital achievement certificates for high scorers.
+- Active state-wide and national leaderboards.
+
+## Core Pages & URL Map
+- **Home Page:** https://rakhicoaching.com/
+- **Classroom Courses:** https://rakhicoaching.com/#courses
+- **Digital Notes Store:** https://rakhicoaching.com/#notes-store
+- **Online Test Series:** https://rakhicoaching.com/#test-series
+- **Faculty Profiles:** https://rakhicoaching.com/#faculty
+- **Class Timetable:** https://rakhicoaching.com/#timetable
+- **Educational Blog:** https://rakhicoaching.com/#blog
+- **FAQs & Support:** https://rakhicoaching.com/#faq
+- **Contact Us:** https://rakhicoaching.com/#contact
+- **XML Sitemap:** https://rakhicoaching.com/sitemap.xml
+- **Robots Index:** https://rakhicoaching.com/robots.txt
+- **Humans Metadata:** https://rakhicoaching.com/humans.txt
+
+## Tech Stack & Architecture
+- Modern React 18, TypeScript, Tailwind CSS, Vite
+- Server-side Gemini AI integration for smart student doubt resolution & note summaries
+- Razorpay payment gateway integration

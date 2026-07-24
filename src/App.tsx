@@ -522,8 +522,8 @@ export default function App() {
       {/* 2. Main Tab View Dispatcher */}
       <main className="flex-1 pb-16">
         
-        {/* Core Public Views (Home, About, Courses, Faculty, Timetable, Blogs, Contact, Legal) */}
-        {['home', 'about', 'courses', 'faculty', 'timetable', 'blog', 'contact', 'privacy', 'terms', 'faq'].includes(activeTab) && (
+        {/* Core Public Views (Home, About, Courses, Faculty, Timetable, Blogs, Contact, Legal, Sitemap) */}
+        {['home', 'about', 'courses', 'faculty', 'timetable', 'blog', 'contact', 'privacy', 'terms', 'faq', 'sitemap'].includes(activeTab) && (
           <PublicPages
             activeTab={activeTab}
             setActiveTab={setActiveTab}

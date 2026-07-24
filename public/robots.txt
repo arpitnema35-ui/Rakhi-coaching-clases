@@ -1,0 +1,26 @@
+# robots.txt for Rakhi Coaching Classes
+# Allow all major search engine crawlers and web spiders
+
+User-agent: *
+Allow: /
+Allow: /#courses
+Allow: /#notes-store
+Allow: /#test-series
+Allow: /#about
+Allow: /#faculty
+Allow: /#timetable
+Allow: /#blog
+Allow: /#faq
+Allow: /#contact
+Allow: /#sitemap
+Allow: /sitemap.xml
+Allow: /llms.txt
+Allow: /humans.txt
+
+# Disallow private user admin dashboard routes from public indexing
+Disallow: /admin
+Disallow: /student-dashboard
+
+# Host and Sitemap declaration
+Host: https://rakhicoaching.com
+Sitemap: https://rakhicoaching.com/sitemap.xml

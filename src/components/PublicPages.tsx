@@ -17,7 +17,13 @@ import {
   MessageSquare, 
   ChevronDown, 
   FileText,
-  X
+  X,
+  Compass,
+  Globe,
+  ExternalLink,
+  Search,
+  Shield,
+  Zap
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Course, Teacher, Blog, ContactMessage, AdmissionApplication, FAQItem } from '../types';
@@ -80,6 +86,188 @@ export default function PublicPages({
 
   // FAQ Accordion
   const [openFAQIndex, setOpenFAQIndex] = useState<number | null>(null);
+
+  // Sitemap Search
+  const [sitemapSearch, setSitemapSearch] = useState('');
+
+  const sitemapEntries = [
+    {
+      title: 'Home Page & Hero Banner',
+      url: '/',
+      hash: 'home',
+      category: 'Main Portal',
+      priority: '1.0 (Maximum)',
+      priorityVal: 1.0,
+      changefreq: 'Daily',
+      description: 'Official portal landing page, feature highlights, admission callouts, and latest institute updates.',
+      icon: Globe
+    },
+    {
+      title: 'Classroom Courses & Batches',
+      url: '/#courses',
+      hash: 'courses',
+      category: 'Academic Offerings',
+      priority: '0.95 (High Impact)',
+      priorityVal: 0.95,
+      changefreq: 'Daily',
+      description: 'Detailed syllabus, batch timings, fees structure for Class 8-12, JEE Mains/Advanced, and NEET target programs.',
+      icon: BookOpen
+    },
+    {
+      title: 'Digital PDF Notes Store',
+      url: '/#notes-store',
+      hash: 'notes-store',
+      category: 'Digital Store',
+      priority: '0.95 (High Impact)',
+      priorityVal: 0.95,
+      changefreq: 'Daily',
+      description: 'Instant PDF download store featuring chapter summaries, board papers, and formula formula vectors.',
+      icon: FileText
+    },
+    {
+      title: 'Online Mock Test Series',
+      url: '/#test-series',
+      hash: 'test-series',
+      category: 'MCQ Assessment',
+      priority: '0.90 (High)',
+      priorityVal: 0.90,
+      changefreq: 'Daily',
+      description: 'Interactive online MCQ tests with instant evaluation, correct answer feedback, and certificate generator.',
+      icon: Award
+    },
+    {
+      title: 'Class 10 Boards Accelerator',
+      url: '/#class-10-boards',
+      hash: 'courses',
+      category: 'Special Batch',
+      priority: '0.88 (Targeted)',
+      priorityVal: 0.88,
+      changefreq: 'Weekly',
+      description: 'Focused CBSE Board preparation for Science and Mathematics with past paper practice.',
+      icon: Zap
+    },
+    {
+      title: 'Class 12 Boards Champion Batch',
+      url: '/#class-12-boards',
+      hash: 'courses',
+      category: 'Special Batch',
+      priority: '0.88 (Targeted)',
+      priorityVal: 0.88,
+      changefreq: 'Weekly',
+      description: 'Comprehensive Board exam series covering Physics, Chemistry, and Mathematics.',
+      icon: Zap
+    },
+    {
+      title: 'JEE & NEET Foundation Program',
+      url: '/#jee-neet-foundation',
+      hash: 'courses',
+      category: 'Special Batch',
+      priority: '0.88 (Targeted)',
+      priorityVal: 0.88,
+      changefreq: 'Weekly',
+      description: 'Competitive entrance batch for Class 11-12 engineering and medical aspirants.',
+      icon: Zap
+    },
+    {
+      title: 'About Institute & Directors',
+      url: '/#about',
+      hash: 'about',
+      category: 'Institute Info',
+      priority: '0.85 (High)',
+      priorityVal: 0.85,
+      changefreq: 'Weekly',
+      description: 'Institute overview, pedagogical philosophy, 15+ years excellence legacy, and leadership team.',
+      icon: Compass
+    },
+    {
+      title: 'Expert Faculty Panel',
+      url: '/#faculty',
+      hash: 'faculty',
+      category: 'Institute Info',
+      priority: '0.85 (High)',
+      priorityVal: 0.85,
+      changefreq: 'Weekly',
+      description: 'Profiles and qualifications of subject-matter expert educators in Physics, Chemistry, and Math.',
+      icon: Users
+    },
+    {
+      title: 'Class Schedule & Timetable',
+      url: '/#timetable',
+      hash: 'timetable',
+      category: 'Institute Info',
+      priority: '0.85 (High)',
+      priorityVal: 0.85,
+      changefreq: 'Weekly',
+      description: 'Weekly schedule for morning and evening offline classroom batches and online doubt sessions.',
+      icon: Calendar
+    },
+    {
+      title: 'Educational Blog & Articles',
+      url: '/#blog',
+      hash: 'blog',
+      category: 'Resources',
+      priority: '0.80 (Standard)',
+      priorityVal: 0.80,
+      changefreq: 'Daily',
+      description: 'Exam strategy guides, formula vector tips, board study revision hacks, and student guidance.',
+      icon: MessageSquare
+    },
+    {
+      title: 'Help Center & FAQs',
+      url: '/#faq',
+      hash: 'faq',
+      category: 'Support',
+      priority: '0.75 (Support)',
+      priorityVal: 0.75,
+      changefreq: 'Monthly',
+      description: 'Answers to frequent questions about admissions, payments, note access, and mock test scoring.',
+      icon: HelpCircle
+    },
+    {
+      title: 'Contact Support & Location',
+      url: '/#contact',
+      hash: 'contact',
+      category: 'Support',
+      priority: '0.75 (Support)',
+      priorityVal: 0.75,
+      changefreq: 'Monthly',
+      description: 'Katangi offline coaching center address, phone numbers, Google Map coordinates, and query form.',
+      icon: MapPin
+    },
+    {
+      title: 'Visual Sitemap Directory',
+      url: '/#sitemap',
+      hash: 'sitemap',
+      category: 'SEO & Index',
+      priority: '0.70 (Directory)',
+      priorityVal: 0.70,
+      changefreq: 'Weekly',
+      description: 'Full visual HTML page directory and crawl index for search engine optimization.',
+      icon: Compass
+    },
+    {
+      title: 'Privacy Policy',
+      url: '/#privacy',
+      hash: 'privacy',
+      category: 'Legal & Trust',
+      priority: '0.50 (Legal)',
+      priorityVal: 0.50,
+      changefreq: 'Yearly',
+      description: 'Data protection policies, user privacy standards, and credential encryption protocols.',
+      icon: Shield
+    },
+    {
+      title: 'Terms & Conditions',
+      url: '/#terms',
+      hash: 'terms',
+      category: 'Legal & Trust',
+      priority: '0.50 (Legal)',
+      priorityVal: 0.50,
+      changefreq: 'Yearly',
+      description: 'Service agreement, study material copyright guidelines, and refund policy terms.',
+      icon: FileText
+    }
+  ];
 
   const faqItems: FAQItem[] = [
     {
@@ -1095,6 +1283,169 @@ export default function PublicPages({
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ------------------ SITEMAP & PAGE DIRECTORY ------------------ */}
+      {activeTab === 'sitemap' && (
+        <div id="sitemap-view" className="max-w-6xl mx-auto px-4 py-8 space-y-8">
+          
+          {/* Header Hero Banner */}
+          <div className="bg-gradient-to-r from-orange-500/15 via-red-500/10 to-amber-500/15 dark:from-orange-950/50 dark:via-red-950/40 dark:to-amber-950/40 border border-orange-300/80 dark:border-orange-500/30 p-8 rounded-3xl backdrop-blur-xl shadow-xl shadow-orange-500/10 relative overflow-hidden space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+              <div className="space-y-2 max-w-2xl">
+                <div className="inline-flex items-center space-x-2 px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-full text-orange-600 dark:text-orange-400 text-xs font-mono font-extrabold uppercase tracking-wider">
+                  <Compass size={14} className="animate-spin" style={{ animationDuration: '12s' }} />
+                  <span>SEO Sitemap & Crawl Index</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                  Website Page Directory & Crawl Sitemap
+                </h1>
+                <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
+                  Indexed structure of Rakhi Coaching Classes pages with search priorities, crawl frequencies, and direct navigation links for search engine crawlers and visitors.
+                </p>
+              </div>
+
+              {/* Download / Open sitemap.xml, robots.txt, llms.txt, humans.txt CTA */}
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <a
+                  href="/sitemap.xml"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2.5 bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 hover:from-orange-600 hover:to-red-600 text-white rounded-2xl text-xs font-extrabold flex items-center justify-center space-x-1.5 shadow-lg shadow-orange-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                >
+                  <Globe size={14} />
+                  <span>sitemap.xml</span>
+                  <ExternalLink size={12} />
+                </a>
+                <a
+                  href="/robots.txt"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-2.5 bg-white/80 dark:bg-[#18110d]/80 border border-orange-200 dark:border-orange-900/50 hover:border-orange-400 text-stone-700 dark:text-stone-300 rounded-2xl text-xs font-mono font-bold flex items-center justify-center space-x-1 transition-all cursor-pointer"
+                >
+                  <span>robots.txt</span>
+                  <ExternalLink size={11} />
+                </a>
+                <a
+                  href="/llms.txt"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-2.5 bg-white/80 dark:bg-[#18110d]/80 border border-orange-200 dark:border-orange-900/50 hover:border-orange-400 text-stone-700 dark:text-stone-300 rounded-2xl text-xs font-mono font-bold flex items-center justify-center space-x-1 transition-all cursor-pointer"
+                >
+                  <span>llms.txt</span>
+                  <ExternalLink size={11} />
+                </a>
+                <a
+                  href="/humans.txt"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-2.5 bg-white/80 dark:bg-[#18110d]/80 border border-orange-200 dark:border-orange-900/50 hover:border-orange-400 text-stone-700 dark:text-stone-300 rounded-2xl text-xs font-mono font-bold flex items-center justify-center space-x-1 transition-all cursor-pointer"
+                >
+                  <span>humans.txt</span>
+                  <ExternalLink size={11} />
+                </a>
+              </div>
+            </div>
+
+            {/* Quick Priority & Crawl Stats Pills */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-orange-200/60 dark:border-orange-900/40 text-xs">
+              <div className="bg-white/60 dark:bg-[#18110d]/80 p-3 rounded-2xl border border-orange-200/50 dark:border-orange-900/30 space-y-0.5">
+                <span className="text-[10px] text-stone-500 block font-bold uppercase">INDEXED PAGES</span>
+                <span className="text-base font-extrabold text-orange-600 dark:text-orange-400 font-mono">16 Direct Routes</span>
+              </div>
+              <div className="bg-white/60 dark:bg-[#18110d]/80 p-3 rounded-2xl border border-orange-200/50 dark:border-orange-900/30 space-y-0.5">
+                <span className="text-[10px] text-stone-500 block font-bold uppercase">MAX CRAWL PRIORITY</span>
+                <span className="text-base font-extrabold text-amber-600 dark:text-amber-400 font-mono">1.0 (Home/Courses)</span>
+              </div>
+              <div className="bg-white/60 dark:bg-[#18110d]/80 p-3 rounded-2xl border border-orange-200/50 dark:border-orange-900/30 space-y-0.5">
+                <span className="text-[10px] text-stone-500 block font-bold uppercase">CRAWL FREQUENCY</span>
+                <span className="text-base font-extrabold text-red-600 dark:text-red-400 font-mono">Daily & Weekly</span>
+              </div>
+              <div className="bg-white/60 dark:bg-[#18110d]/80 p-3 rounded-2xl border border-orange-200/50 dark:border-orange-900/30 space-y-0.5">
+                <span className="text-[10px] text-stone-500 block font-bold uppercase">XML PROTOCOL</span>
+                <span className="text-base font-extrabold text-slate-900 dark:text-white font-mono">sitemaps.org 0.9</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Search Filter Bar */}
+          <div className="relative w-full">
+            <Search size={16} className="absolute left-4 top-3.5 text-stone-400" />
+            <input
+              type="text"
+              placeholder="Search sitemap pages by title, URL path, priority, or category..."
+              value={sitemapSearch}
+              onChange={(e) => setSitemapSearch(e.target.value)}
+              className="w-full bg-white/80 dark:bg-[#18110d]/80 backdrop-blur-xl border border-orange-200/80 dark:border-orange-900/40 rounded-2xl pl-11 pr-4 py-3 text-xs text-slate-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
+            />
+          </div>
+
+          {/* Sitemap Entries Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {sitemapEntries
+              .filter(item => 
+                item.title.toLowerCase().includes(sitemapSearch.toLowerCase()) ||
+                item.category.toLowerCase().includes(sitemapSearch.toLowerCase()) ||
+                item.description.toLowerCase().includes(sitemapSearch.toLowerCase()) ||
+                item.url.toLowerCase().includes(sitemapSearch.toLowerCase())
+              )
+              .map((entry, idx) => {
+                const IconComponent = entry.icon;
+                return (
+                  <div
+                    key={idx}
+                    className="bg-white/80 dark:bg-[#18110d]/70 backdrop-blur-xl border border-orange-200/80 dark:border-orange-900/40 p-6 rounded-3xl shadow-lg shadow-orange-500/5 hover:border-orange-400 dark:hover:border-orange-500/40 transition-all flex flex-col justify-between space-y-4"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="px-2.5 py-0.5 bg-orange-50 dark:bg-orange-950/50 text-orange-700 dark:text-orange-300 text-[10px] font-mono font-extrabold rounded-lg uppercase border border-orange-200 dark:border-orange-900/30">
+                          {entry.category}
+                        </span>
+                        <div className="flex items-center space-x-2">
+                          <span className="px-2 py-0.5 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[10px] font-mono font-black rounded-md border border-amber-500/20">
+                            Priority: {entry.priority}
+                          </span>
+                          <span className="px-2 py-0.5 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 text-[10px] font-mono font-bold rounded-md">
+                            {entry.changefreq}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start space-x-3 pt-1">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-500/20 to-red-500/20 border border-orange-300 dark:border-orange-500/30 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0">
+                          <IconComponent size={20} />
+                        </div>
+                        <div>
+                          <h3 className="font-extrabold text-sm text-slate-900 dark:text-white leading-tight">
+                            {entry.title}
+                          </h3>
+                          <p className="text-[11px] font-mono text-orange-600 dark:text-orange-400 mt-0.5">
+                            https://rakhicoaching.com{entry.url}
+                          </p>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
+                        {entry.description}
+                      </p>
+                    </div>
+
+                    <div className="pt-3 border-t border-orange-100 dark:border-orange-950/60 flex items-center justify-between">
+                      <span className="text-[10px] text-stone-400 font-mono">Canonical Path: {entry.url}</span>
+                      <button
+                        onClick={() => setActiveTab(entry.hash)}
+                        className="px-3.5 py-2 bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl text-xs font-extrabold flex items-center space-x-1 shadow-md shadow-orange-500/20 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        <span>Visit Page</span>
+                        <ArrowRight size={12} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+
         </div>
       )}
 

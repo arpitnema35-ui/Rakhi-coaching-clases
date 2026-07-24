@@ -1,0 +1,21 @@
+/* TEAM */
+  Owner & Director: Arpit Nema
+  Email: arpitnema35@gmail.com
+  Phone: +91 78289 08559
+  Location: Kudan, Katangi, Madhya Pradesh, India
+  Role: Founder, Chief Educator & Educational Strategist
+
+  Web Development & Design Team: Rakhi Coaching Digital Wing
+  Contact: arpitnema35@gmail.com
+  Twitter/X: @RakhiCoaching
+
+/* SITE */
+  Last Update: 2026/07/24
+  Language: English / Hindi
+  Doctype: HTML5
+  IDE: Google AI Studio
+  Framework: React 18, Vite, TypeScript
+  Styling: Tailwind CSS, Lucide Icons, Motion Animation
+  AI Model: Gemini Flash & Pro Integration
+  Payment Processing: Razorpay Gateway
+  Standards: W3C Validated, Mobile First, PWA Ready, SEO Optimized
