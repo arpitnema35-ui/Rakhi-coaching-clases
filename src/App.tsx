@@ -47,6 +47,7 @@ import NotesStore from './components/NotesStore';
 import OnlineTestSeries from './components/OnlineTestSeries';
 import StudentDashboard from './components/StudentDashboard';
 import AdminPanel from './components/AdminPanel';
+import NotFound from './components/NotFound';
 
 export default function App() {
   
@@ -304,6 +305,34 @@ export default function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [darkMode]);
+
+  // 4. Route Hash & Path Synchronization with 404 Fallback
+  useEffect(() => {
+    const validTabs = [
+      'home', 'about', 'courses', 'faculty', 'timetable', 'blog', 'contact', 
+      'privacy', 'terms', 'faq', 'sitemap', 'notes-store', 'test-series', 'admin-panel'
+    ];
+
+    const syncRouteWithTab = () => {
+      const hash = window.location.hash.replace('#', '').trim();
+      const path = window.location.pathname.replace('/', '').trim();
+      const route = hash || path;
+
+      if (!route) {
+        return;
+      }
+
+      if (validTabs.includes(route) || route.startsWith('dashboard-')) {
+        setActiveTab(route);
+      } else {
+        setActiveTab('404');
+      }
+    };
+
+    syncRouteWithTab();
+    window.addEventListener('hashchange', syncRouteWithTab);
+    return () => window.removeEventListener('hashchange', syncRouteWithTab);
+  }, []);
 
   // Auth Submit Handlers
   const handleAuthSubmit = async (e: React.FormEvent) => {
@@ -600,6 +629,14 @@ export default function App() {
             onToggleContactStatus={handleToggleContactStatus}
             userEmail={user?.email}
           />
+        )}
+
+        {/* 404 Custom Interactive Page for Non-existent Routes */}
+        {(activeTab === '404' || (
+          !['home', 'about', 'courses', 'faculty', 'timetable', 'blog', 'contact', 'privacy', 'terms', 'faq', 'sitemap', 'notes-store', 'test-series', 'admin-panel'].includes(activeTab) && 
+          !activeTab.startsWith('dashboard-')
+        )) && (
+          <NotFound setActiveTab={setActiveTab} />
         )}
 
       </main>
