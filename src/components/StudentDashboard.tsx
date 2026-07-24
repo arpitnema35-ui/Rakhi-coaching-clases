@@ -149,15 +149,15 @@ export default function StudentDashboard({
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         {/* Left Side Tab Navigator Panel */}
-        <div className="lg:col-span-1 bg-slate-900/50 border border-slate-800 p-6 rounded-3xl shadow-md space-y-6 h-fit">
-          <div className="flex items-center space-x-3 pb-4 border-b border-slate-800">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-blue-600 text-white flex items-center justify-center font-black text-lg shadow-sm">
+        <div className="lg:col-span-1 bg-white/80 dark:bg-[#18110d]/70 backdrop-blur-xl border border-orange-200/80 dark:border-orange-900/40 p-6 rounded-3xl shadow-lg shadow-orange-500/5 space-y-6 h-fit">
+          <div className="flex items-center space-x-3 pb-4 border-b border-orange-100 dark:border-orange-950/60">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-500 via-red-500 to-amber-500 text-white flex items-center justify-center font-black text-lg shadow-md shadow-orange-500/20">
               {user.displayName.charAt(0).toUpperCase()}
             </div>
             <div className="space-y-0.5 truncate">
-              <h4 className="font-extrabold text-sm text-white truncate">{user.displayName}</h4>
-              <p className="text-[10px] text-slate-550 text-slate-400 truncate">{user.email}</p>
-              <span className="inline-block px-1.5 py-0.5 bg-indigo-500/10 text-[9px] text-indigo-300 font-mono rounded uppercase border border-indigo-500/20">
+              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white truncate">{user.displayName}</h4>
+              <p className="text-[10px] text-stone-500 dark:text-stone-400 truncate">{user.email}</p>
+              <span className="inline-block px-2 py-0.5 bg-orange-50 dark:bg-orange-950/50 text-[9px] text-orange-700 dark:text-orange-300 font-mono font-bold rounded-lg uppercase border border-orange-200 dark:border-orange-900/30">
                 {user.role} Profile
               </span>
             </div>
@@ -170,10 +170,10 @@ export default function StudentDashboard({
                 <button
                   key={tab.id}
                   onClick={() => setActiveDashboardTab(tab.id)}
-                  className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-2.5 transition-colors cursor-pointer ${
+                  className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-extrabold flex items-center space-x-2.5 transition-all cursor-pointer ${
                     activeDashboardTab === tab.id
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10'
-                      : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'
+                      ? 'bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 text-white shadow-md shadow-orange-500/25'
+                      : 'text-stone-700 dark:text-stone-300 hover:bg-orange-50/50 dark:hover:bg-orange-950/30 hover:text-orange-600 dark:hover:text-orange-400'
                   }`}
                 >
                   <IconComp size={14} />
@@ -191,35 +191,35 @@ export default function StudentDashboard({
           {activeDashboardTab === 'overview' && (
             <div className="space-y-6">
               {/* Greetings */}
-              <div className="p-6 bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-900 border border-slate-800 rounded-3xl text-white space-y-2 relative overflow-hidden">
-                <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+              <div className="p-6 bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 border border-orange-400/30 rounded-3xl text-white space-y-2 relative overflow-hidden shadow-xl shadow-orange-500/15">
+                <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
                 <h2 className="text-xl sm:text-2xl font-extrabold relative z-10">Welcome back, {user.displayName}! 👋</h2>
-                <p className="text-xs text-slate-400 relative z-10">
+                <p className="text-xs text-orange-100 relative z-10">
                   Track your coaching progress, read revision notes, and take mock assessments to score better.
                 </p>
               </div>
 
               {/* Quick stats cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl shadow-md space-y-1">
-                  <span className="text-[10px] text-slate-500 block font-bold uppercase">PURCHASED NOTES</span>
-                  <p className="text-3xl font-black text-indigo-400 font-sans tracking-tight">{purchasedNotes.length}</p>
-                  <p className="text-[10px] text-slate-550 mt-1 text-slate-400">Available for PDF download</p>
+                <div className="bg-white/80 dark:bg-[#18110d]/70 backdrop-blur-xl border border-orange-200/80 dark:border-orange-900/40 p-6 rounded-3xl shadow-lg shadow-orange-500/5 space-y-1">
+                  <span className="text-[10px] text-stone-500 dark:text-stone-400 block font-bold uppercase">PURCHASED NOTES</span>
+                  <p className="text-3xl font-black text-orange-600 dark:text-orange-400 font-sans tracking-tight">{purchasedNotes.length}</p>
+                  <p className="text-[10px] text-stone-500 dark:text-stone-400 mt-1">Available for PDF download</p>
                 </div>
-                <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl shadow-md space-y-1">
-                  <span className="text-[10px] text-slate-500 block font-bold uppercase">MOCK TESTS ATTEMPTED</span>
-                  <p className="text-3xl font-black text-indigo-400 font-sans tracking-tight">{results.length}</p>
-                  <p className="text-[10px] text-slate-550 mt-1 text-slate-400">Completed MCQ sessions</p>
+                <div className="bg-white/80 dark:bg-[#18110d]/70 backdrop-blur-xl border border-orange-200/80 dark:border-orange-900/40 p-6 rounded-3xl shadow-lg shadow-orange-500/5 space-y-1">
+                  <span className="text-[10px] text-stone-500 dark:text-stone-400 block font-bold uppercase">MOCK TESTS ATTEMPTED</span>
+                  <p className="text-3xl font-black text-red-600 dark:text-red-400 font-sans tracking-tight">{results.length}</p>
+                  <p className="text-[10px] text-stone-500 dark:text-stone-400 mt-1">Completed MCQ sessions</p>
                 </div>
-                <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl shadow-md space-y-1">
-                  <span className="text-[10px] text-slate-500 block font-bold uppercase">COURSES ENROLLED</span>
-                  <p className="text-3xl font-black text-indigo-400 font-sans tracking-tight">{(user.enrolledCourses || []).length || 1}</p>
-                  <p className="text-[10px] text-slate-550 mt-1 text-slate-400">Classroom batches active</p>
+                <div className="bg-white/80 dark:bg-[#18110d]/70 backdrop-blur-xl border border-orange-200/80 dark:border-orange-900/40 p-6 rounded-3xl shadow-lg shadow-orange-500/5 space-y-1">
+                  <span className="text-[10px] text-stone-500 dark:text-stone-400 block font-bold uppercase">COURSES ENROLLED</span>
+                  <p className="text-3xl font-black text-amber-600 dark:text-amber-400 font-sans tracking-tight">{(user.enrolledCourses || []).length || 1}</p>
+                  <p className="text-[10px] text-stone-500 dark:text-stone-400 mt-1">Classroom batches active</p>
                 </div>
               </div>
 
               {/* Short guidelines for the sandbox */}
-              <div className="bg-indigo-500/10 border border-indigo-500/25 p-4 rounded-2xl text-xs text-indigo-300 space-y-1">
+              <div className="bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/25 p-4 rounded-2xl text-xs text-indigo-800 dark:text-indigo-300 space-y-1">
                 <p className="font-bold">📚 Quick Sandbox Guide:</p>
                 <p>1. Go to the **Notes Store**, select a note, click "Add Cart", and trigger checkout using our secure simulated QR Razorpay sandbox. Once completed, your note will appear under the **Purchased Notes** tab.</p>
                 <p>2. Go to the **Test Series** tab, attempt any mock exam, submit your scores, and immediately retrieve your verifiable digital award certificate!</p>
@@ -230,17 +230,17 @@ export default function StudentDashboard({
           {/* 2. PURCHASED NOTES VIEW */}
           {activeDashboardTab === 'notes' && (
             <div className="space-y-4">
-              <div className="border-b border-slate-800 pb-3">
-                <h3 className="font-bold text-base text-white">Your Notes Library</h3>
-                <p className="text-xs text-slate-400">Read summaries online or trigger offline mock PDF downloads.</p>
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">Your Notes Library</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400">Read summaries online or trigger offline mock PDF downloads.</p>
               </div>
 
               {purchasedNotes.length === 0 ? (
-                <div className="text-center py-20 bg-slate-900/50 rounded-3xl border border-slate-800 space-y-4">
-                  <FileText size={44} className="text-slate-500 mx-auto" />
+                <div className="text-center py-20 bg-white dark:bg-slate-900/50 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-4">
+                  <FileText size={44} className="text-slate-400 mx-auto" />
                   <div>
-                    <p className="font-bold text-slate-300">No notes purchased yet</p>
-                    <p className="text-xs text-slate-400 mt-1">Notes you secure from our Revision Store will instantly activate here.</p>
+                    <p className="font-bold text-slate-700 dark:text-slate-300">No notes purchased yet</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Notes you secure from our Revision Store will instantly activate here.</p>
                   </div>
                   <button 
                     onClick={() => setActiveDashboardTab('notes-store')}
@@ -254,20 +254,20 @@ export default function StudentDashboard({
                   {purchasedNotes.map((note) => (
                     <div 
                       key={note.id}
-                      className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl shadow-md flex flex-col justify-between hover:border-slate-700 transition-colors"
+                      className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
                     >
                       <div className="space-y-3">
-                        <span className="px-2 py-0.5 bg-indigo-500/10 text-indigo-300 text-[9px] font-bold font-mono rounded uppercase border border-indigo-500/20">
+                        <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 text-[9px] font-bold font-mono rounded uppercase border border-indigo-200 dark:border-indigo-500/20">
                           {note.subject} • {note.grade}
                         </span>
-                        <h4 className="font-bold text-sm text-white leading-tight">{note.title}</h4>
-                        <p className="text-xs text-slate-400 line-clamp-2">{note.description}</p>
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-white leading-tight">{note.title}</h4>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">{note.description}</p>
                       </div>
 
-                      <div className="border-t border-slate-800/80 pt-4 flex gap-2 mt-6">
+                      <div className="border-t border-slate-100 dark:border-slate-800/80 pt-4 flex gap-2 mt-6">
                         <button
                           onClick={() => setReadingNote(note)}
-                          className="flex-1 py-2 border border-slate-800 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/50 flex items-center justify-center gap-1 cursor-pointer"
+                          className="flex-1 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50 flex items-center justify-center gap-1 cursor-pointer"
                         >
                           <Eye size={12} />
                           <span>Open PDF Reader</span>
@@ -290,29 +290,29 @@ export default function StudentDashboard({
           {/* 3. ENROLLED CLASSES VIEW */}
           {activeDashboardTab === 'courses' && (
             <div className="space-y-4">
-              <div className="border-b border-slate-800 pb-3">
-                <h3 className="font-bold text-base text-white">Active Classroom Batches</h3>
-                <p className="text-xs text-slate-400">You are registered to the following physical / digital classroom stream.</p>
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">Active Classroom Batches</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400">You are registered to the following physical / digital classroom stream.</p>
               </div>
 
-              <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl shadow-md space-y-4">
+              <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md space-y-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-300 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
                     <BookOpen size={20} />
                   </div>
                   <div>
-                    <h4 className="font-extrabold text-sm text-white">Class 10 Board Accelerator Batch</h4>
+                    <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">Class 10 Board Accelerator Batch</h4>
                     <p className="text-xs text-slate-500">Classroom Block B • Faculty: Prof. Rakhi Nema</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-800 pt-4 text-xs text-slate-400">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 dark:border-slate-800 pt-4 text-xs text-slate-600 dark:text-slate-400">
                   <div className="space-y-1">
-                    <p className="font-semibold text-white">Batch Timetable Days</p>
+                    <p className="font-semibold text-slate-900 dark:text-white">Batch Timetable Days</p>
                     <p>Mon, Wed, Fri (Mathematics) • Tue, Thu, Sat (Physics/Science)</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="font-semibold text-white">Daily Lecture Timings</p>
+                    <p className="font-semibold text-slate-900 dark:text-white">Daily Lecture Timings</p>
                     <p className="font-mono">04:00 PM - 05:30 PM (IST)</p>
                   </div>
                 </div>

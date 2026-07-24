@@ -152,20 +152,20 @@ export default function NotesStore({
     <div id="notes-store-container" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Revision Notes Store</h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Revision Notes Store</h1>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
             Unlock premium high-yield revision summaries built for Class 9-12 Boards, JEE & NEET.
           </p>
         </div>
 
         {/* Promo code notice banner */}
-        <div className="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex items-center space-x-3 text-xs shrink-0">
-          <Tag size={16} className="text-indigo-400 animate-pulse" />
+        <div className="bg-gradient-to-r from-orange-500/15 via-red-500/10 to-amber-500/15 dark:from-orange-950/40 dark:via-red-950/30 dark:to-amber-950/30 border border-orange-300/80 dark:border-orange-500/30 p-3.5 rounded-2xl flex items-center space-x-3 text-xs shrink-0 shadow-sm backdrop-blur-md">
+          <Tag size={16} className="text-orange-600 dark:text-orange-400 animate-pulse" />
           <div>
-            <p className="font-bold text-white">Use Coupon: <span className="text-indigo-400 font-mono font-black">SCOREMAX</span></p>
-            <p className="text-[10px] text-slate-500">Get flat 20% off on study bills above ₹200</p>
+            <p className="font-extrabold text-slate-900 dark:text-white">Use Coupon: <span className="text-orange-600 dark:text-orange-400 font-mono font-black">SCOREMAX</span></p>
+            <p className="text-[10px] text-stone-600 dark:text-stone-400">Get flat 20% off on study bills above ₹200</p>
           </div>
         </div>
       </div>
@@ -174,13 +174,13 @@ export default function NotesStore({
       <div className="flex flex-col sm:flex-row items-center gap-4">
         {/* Search */}
         <div className="relative flex-1 w-full">
-          <Search size={16} className="absolute left-3.5 top-3 text-slate-500" />
+          <Search size={16} className="absolute left-3.5 top-3 text-stone-400" />
           <input
             type="text"
             placeholder="Search notes by topic, chapter, or formula..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full bg-white/80 dark:bg-[#18110d]/80 backdrop-blur-xl border border-orange-200/80 dark:border-orange-900/40 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
           />
         </div>
 
@@ -196,10 +196,10 @@ export default function NotesStore({
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-4 py-2 rounded-xl text-xs font-medium cursor-pointer shrink-0 transition-colors ${
+              className={`px-4 py-2 rounded-xl text-xs font-extrabold cursor-pointer shrink-0 transition-all ${
                 selectedCategory === cat.id
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                  ? 'bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 text-white shadow-md shadow-orange-500/25'
+                  : 'bg-white/80 dark:bg-[#18110d]/80 border border-orange-200/80 dark:border-orange-900/40 text-stone-700 dark:text-stone-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50/50'
               }`}
             >
               {cat.label}
@@ -213,49 +213,49 @@ export default function NotesStore({
         {filteredNotes.map((note) => (
           <div 
             key={note.id}
-            className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden shadow-md hover:border-slate-700 transition-all flex flex-col justify-between"
+            className="bg-white/80 dark:bg-[#18110d]/70 backdrop-blur-xl border border-orange-200/80 dark:border-orange-900/40 rounded-3xl overflow-hidden shadow-lg shadow-orange-500/5 hover:border-orange-400 dark:hover:border-orange-500/40 transition-all flex flex-col justify-between"
           >
             {/* Note Preview Body */}
             <div className="p-6 space-y-4">
               <div className="flex items-start justify-between">
-                <span className="px-2 py-0.5 bg-indigo-500/10 text-indigo-300 text-[9px] font-bold font-mono rounded uppercase tracking-wider border border-indigo-500/20">
+                <span className="px-2.5 py-0.5 bg-orange-50 dark:bg-orange-950/50 text-orange-700 dark:text-orange-300 text-[9px] font-bold font-mono rounded-lg uppercase tracking-wider border border-orange-200 dark:border-orange-900/30">
                   {note.grade}
                 </span>
                 <div className="flex items-center space-x-1 text-amber-500 text-xs font-bold">
-                  <Star size={12} className="fill-current" />
+                  <Star size={12} className="fill-current text-amber-500" />
                   <span>{note.rating}</span>
                 </div>
               </div>
 
               <div className="space-y-1">
-                <h3 className="font-extrabold text-sm text-white leading-tight">
+                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white leading-tight">
                   {note.title}
                 </h3>
-                <p className="text-[10px] text-slate-500 font-medium">Subject: {note.subject} • {note.pagesCount} Pages PDF</p>
+                <p className="text-[10px] text-stone-500 dark:text-stone-400 font-medium">Subject: {note.subject} • {note.pagesCount} Pages PDF</p>
               </div>
 
-              <p className="text-xs text-slate-400 line-clamp-2">
+              <p className="text-xs text-slate-600 dark:text-stone-300 line-clamp-2">
                 {note.description}
               </p>
             </div>
 
             {/* Note Pricing & Buy Panel */}
-            <div className="p-6 pt-0 border-t border-slate-800/60 flex items-center justify-between mt-auto">
+            <div className="p-6 pt-0 border-t border-orange-100 dark:border-orange-950/60 flex items-center justify-between mt-auto">
               <div>
-                <span className="text-[9px] text-slate-500 block font-bold">PRICE SUMMARY</span>
-                <span className="text-base font-black text-white font-mono">₹{note.price}</span>
+                <span className="text-[9px] text-stone-500 block font-bold">PRICE SUMMARY</span>
+                <span className="text-base font-black text-slate-900 dark:text-white font-mono">₹{note.price}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => setSelectedNote(note)}
-                  className="p-2 border border-slate-800 text-slate-400 hover:text-white rounded-xl cursor-pointer transition-colors"
+                  className="p-2 border border-orange-200 dark:border-orange-900/50 text-stone-600 dark:text-stone-300 hover:text-orange-600 dark:hover:text-orange-400 rounded-xl cursor-pointer transition-colors"
                   title="View Details"
                 >
                   <Eye size={14} />
                 </button>
                 <button
                   onClick={() => handleAddToCart(note)}
-                  className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center space-x-1 shadow-md shadow-indigo-600/10 cursor-pointer transition-all"
+                  className="px-3.5 py-2 bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl text-xs font-extrabold flex items-center space-x-1 shadow-md shadow-orange-500/25 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <ShoppingCart size={12} />
                   <span>Add Cart</span>

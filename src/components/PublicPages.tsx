@@ -210,9 +210,9 @@ export default function PublicPages({
       {activeTab === 'home' && (
         <div id="home-view" className="space-y-6">
           {/* Hero Slider */}
-          <section className="relative overflow-hidden bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-900 border border-slate-800 rounded-3xl mx-4 sm:mx-6 lg:mx-8 p-8 sm:p-16 text-center mt-6 relative group">
-            <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
+          <section className="relative overflow-hidden bg-gradient-to-br from-amber-500/10 via-orange-500/15 to-red-500/10 dark:from-[#2a1309]/80 dark:via-[#1f0e07]/90 dark:to-[#170a05]/90 border border-orange-300/60 dark:border-orange-500/30 backdrop-blur-2xl rounded-3xl mx-4 sm:mx-6 lg:mx-8 p-8 sm:p-16 text-center mt-6 relative group shadow-2xl shadow-orange-500/10">
+            <div className="absolute -top-24 -right-24 w-72 h-72 bg-gradient-to-br from-orange-500/20 to-red-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-gradient-to-tr from-red-500/20 to-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
             
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -220,29 +220,29 @@ export default function PublicPages({
               transition={{ duration: 0.6 }}
               className="max-w-4xl mx-auto space-y-6 relative z-10"
             >
-              <span className="px-3 py-1 bg-indigo-500/20 text-indigo-300 text-[10px] font-bold rounded-full border border-indigo-500/30 tracking-wider uppercase mb-2 inline-block">
-                New Batch: Admissions Open
+              <span className="px-4 py-1.5 bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-600 dark:text-orange-400 text-[10px] font-extrabold rounded-full border border-orange-300/80 dark:border-orange-500/40 tracking-wider uppercase mb-2 inline-block shadow-sm">
+                🔥 New Batch: Admissions Open for 2026-27
               </span>
-              <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-none text-white max-w-3xl mx-auto">
-                Master Your Exams with Expert Guidance.
+              <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-none text-slate-900 dark:text-white max-w-3xl mx-auto">
+                Master Your Exams with <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-red-500 to-amber-500 dark:from-orange-400 dark:via-red-400 dark:to-amber-300">Expert Guidance.</span>
               </h1>
-              <p className="text-sm sm:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
-                Personalized learning paths for NEET, JEE, and Board exams. Join 5000+ successful students today. Learn Smart, Score Better.
+              <p className="text-sm sm:text-lg text-slate-700 dark:text-stone-300 max-w-2xl mx-auto leading-relaxed font-medium">
+                Personalized learning paths for NEET, JEE, and Board exams. Join 5000+ successful toppers today. Learn Smart, Score Better.
               </p>
               
               <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
                 <button
                   onClick={() => setActiveTab('courses')}
-                  className="bg-white hover:bg-slate-100 text-slate-900 px-6 py-3 rounded-xl font-bold text-sm shadow-xl transition-all cursor-pointer flex items-center space-x-2"
+                  className="bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 hover:from-orange-600 hover:to-red-600 text-white px-7 py-3.5 rounded-2xl font-extrabold text-sm shadow-xl shadow-orange-500/30 transition-all cursor-pointer flex items-center space-x-2 hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <span>Apply Online</span>
+                  <span>Apply Online Now</span>
                   <ArrowRight size={16} />
                 </button>
                 <button
                   onClick={() => setActiveTab('notes-store')}
-                  className="bg-slate-800 hover:bg-slate-700 text-white px-6 py-3 rounded-xl font-bold text-sm border border-slate-700 transition-all cursor-pointer"
+                  className="bg-white/80 dark:bg-stone-900/80 hover:bg-orange-50 dark:hover:bg-orange-950/40 text-slate-800 dark:text-stone-100 px-7 py-3.5 rounded-2xl font-extrabold text-sm border border-orange-200 dark:border-orange-900/60 transition-all cursor-pointer shadow-sm"
                 >
-                  View Notes Store
+                  Explore Revision Notes
                 </button>
               </div>
             </motion.div>
@@ -257,11 +257,11 @@ export default function PublicPages({
                 { count: '15+', label: 'Educators & PhDs', desc: 'Expert subject masters' },
                 { count: '120+', label: 'PDF Study Notes', desc: 'Syllabus structured' }
               ].map((stat, i) => (
-                <div key={i} className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl text-center shadow-md relative overflow-hidden group hover:border-slate-700 transition-colors">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  <p className="text-3xl sm:text-4xl font-extrabold text-indigo-400 font-sans tracking-tight">{stat.count}</p>
-                  <p className="text-xs font-bold text-slate-200 mt-2">{stat.label}</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">{stat.desc}</p>
+                <div key={i} className="bg-white/80 dark:bg-[#18110d]/70 backdrop-blur-xl border border-orange-200/80 dark:border-orange-900/40 p-6 rounded-3xl text-center shadow-lg shadow-orange-500/5 relative overflow-hidden group hover:border-orange-400 dark:hover:border-orange-500/40 transition-colors">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <p className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-red-500 to-amber-500 dark:from-orange-400 dark:to-red-400 font-sans tracking-tight">{stat.count}</p>
+                  <p className="text-xs font-bold text-slate-800 dark:text-stone-200 mt-2">{stat.label}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-stone-400 mt-0.5">{stat.desc}</p>
                 </div>
               ))}
             </div>
@@ -271,59 +271,59 @@ export default function PublicPages({
           <section className="py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center max-w-3xl mx-auto mb-10">
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                   Comprehensive Learning Ecosystem
                 </h2>
-                <p className="text-slate-400 text-sm mt-2">
+                <p className="text-slate-600 dark:text-slate-400 text-sm mt-2">
                   Everything you need to boost your scores under a single roof, powered by digital convenience.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Admissions Pillar */}
-                <div className="bg-slate-900/50 border border-slate-800 p-8 rounded-3xl shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
+                <div className="bg-white/80 dark:bg-[#18110d]/70 backdrop-blur-xl border border-orange-200/80 dark:border-orange-900/40 p-8 rounded-3xl shadow-lg shadow-orange-500/5 relative overflow-hidden group hover:border-orange-400 dark:hover:border-orange-500/40 transition-all flex flex-col justify-between">
                   <div>
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-500/20 to-red-500/20 border border-orange-300 dark:border-orange-500/30 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-6 shadow-sm">
                       <Users size={24} />
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-2">Classroom Coaching</h3>
-                    <p className="text-xs text-slate-400 leading-relaxed mb-6">
+                    <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mb-2">Classroom Coaching</h3>
+                    <p className="text-xs text-slate-600 dark:text-stone-300 leading-relaxed mb-6">
                       Interactive physical and digital classroom setups for grades 8-12, JEE and NEET targets. Consistent progress tracking and regular test validations.
                     </p>
                   </div>
-                  <button onClick={() => setActiveTab('courses')} className="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center space-x-1 cursor-pointer mt-auto">
+                  <button onClick={() => setActiveTab('courses')} className="text-xs font-bold text-orange-600 dark:text-orange-400 hover:text-red-500 flex items-center space-x-1 cursor-pointer mt-auto">
                     <span>Apply for coaching</span> <ArrowRight size={12} />
                   </button>
                 </div>
 
                 {/* Notes Pillar */}
-                <div className="bg-slate-900/50 border border-slate-800 p-8 rounded-3xl shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
+                <div className="bg-white/80 dark:bg-[#18110d]/70 backdrop-blur-xl border border-orange-200/80 dark:border-orange-900/40 p-8 rounded-3xl shadow-lg shadow-orange-500/5 relative overflow-hidden group hover:border-orange-400 dark:hover:border-orange-500/40 transition-all flex flex-col justify-between">
                   <div>
-                    <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-500/20 to-amber-500/20 border border-red-300 dark:border-red-500/30 text-red-600 dark:text-red-400 flex items-center justify-center mb-6 shadow-sm">
                       <FileText size={24} />
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-2">Digital Study Notes</h3>
-                    <p className="text-xs text-slate-400 leading-relaxed mb-6">
+                    <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mb-2">Digital Study Notes</h3>
+                    <p className="text-xs text-slate-600 dark:text-stone-300 leading-relaxed mb-6">
                       Expertly prepared chapter PDFs containing shortcut formula vectors, solved previous-year boards, and summary sheets for swift revision.
                     </p>
                   </div>
-                  <button onClick={() => setActiveTab('notes-store')} className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center space-x-1 cursor-pointer mt-auto">
+                  <button onClick={() => setActiveTab('notes-store')} className="text-xs font-bold text-red-600 dark:text-red-400 hover:text-orange-500 flex items-center space-x-1 cursor-pointer mt-auto">
                     <span>Browse PDF Notes Store</span> <ArrowRight size={12} />
                   </button>
                 </div>
 
                 {/* Test Series Pillar */}
-                <div className="bg-slate-900/50 border border-slate-800 p-8 rounded-3xl shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
+                <div className="bg-white/80 dark:bg-[#18110d]/70 backdrop-blur-xl border border-orange-200/80 dark:border-orange-900/40 p-8 rounded-3xl shadow-lg shadow-orange-500/5 relative overflow-hidden group hover:border-orange-400 dark:hover:border-orange-500/40 transition-all flex flex-col justify-between">
                   <div>
-                    <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-300 dark:border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-6 shadow-sm">
                       <Award size={24} />
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-2">Online Test Series</h3>
-                    <p className="text-xs text-slate-400 leading-relaxed mb-6">
+                    <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mb-2">Online Test Series</h3>
+                    <p className="text-xs text-slate-600 dark:text-stone-300 leading-relaxed mb-6">
                       Real-time mock MCQ test simulations equipped with precise timing, prompt score analyses, correct-answer feedback, and verifiable digital score certificates.
                     </p>
                   </div>
-                  <button onClick={() => setActiveTab('test-series')} className="text-xs font-bold text-orange-400 hover:text-orange-300 flex items-center space-x-1 cursor-pointer mt-auto">
+                  <button onClick={() => setActiveTab('test-series')} className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-orange-500 flex items-center space-x-1 cursor-pointer mt-auto">
                     <span>Practice mock tests</span> <ArrowRight size={12} />
                   </button>
                 </div>
@@ -333,41 +333,41 @@ export default function PublicPages({
 
           {/* Testimonial Section */}
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            <div className="bg-gradient-to-br from-indigo-950/40 via-slate-900/60 to-slate-900/40 rounded-3xl p-8 sm:p-12 border border-slate-800">
+            <div className="bg-indigo-50/60 dark:bg-gradient-to-br dark:from-indigo-950/40 dark:via-slate-900/60 dark:to-slate-900/40 rounded-3xl p-8 sm:p-12 border border-slate-200 dark:border-slate-800">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
                 <div className="lg:col-span-1 space-y-3">
-                  <span className="text-xs font-bold uppercase text-indigo-400 tracking-wider">TESTIMONIALS</span>
-                  <h3 className="text-2xl sm:text-3xl font-extrabold text-white">Hear from Our Board Toppers</h3>
-                  <p className="text-sm text-slate-450 text-slate-400">
+                  <span className="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 tracking-wider">TESTIMONIALS</span>
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Hear from Our Board Toppers</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
                     Rakhi Coaching Classes has consistent track records of generating district ranks and medical/engineering entries.
                   </p>
                 </div>
                 <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-slate-900/50 p-6 rounded-3xl border border-slate-800/60">
-                    <p className="text-xs text-slate-400 italic">
+                  <div className="bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-200 dark:border-slate-800/60 shadow-sm">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 italic">
                       "I bought the Class 12 Physics & Chemistry notes package. The shortcuts were unbelievably helpful during my board preparations! The formula list became my instant reference. Scored 96.5% overall!"
                     </p>
                     <div className="flex items-center space-x-3 mt-4">
-                      <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-bold text-xs border border-indigo-500/30">
+                      <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold text-xs border border-indigo-500/30">
                         AM
                       </div>
                       <div>
-                        <h4 className="font-bold text-xs text-white">Aman Mishra</h4>
+                        <h4 className="font-bold text-xs text-slate-900 dark:text-white">Aman Mishra</h4>
                         <p className="text-[10px] text-slate-500">Class 12 Boards Topper (96.5%)</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-slate-900/50 p-6 rounded-3xl border border-slate-800/60">
-                    <p className="text-xs text-slate-400 italic">
+                  <div className="bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-200 dark:border-slate-800/60 shadow-sm">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 italic">
                       "The MCQ mock series for JEE Math helped me manage my timing significantly. The detailed analytics broke down where I was wasting cycles. Highly recommend Rakhi Coaching Classes!"
                     </p>
                     <div className="flex items-center space-x-3 mt-4">
-                      <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-bold text-xs border border-indigo-500/30">
+                      <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold text-xs border border-indigo-500/30">
                         SP
                       </div>
                       <div>
-                        <h4 className="font-bold text-xs text-white">Sneha Patel</h4>
+                        <h4 className="font-bold text-xs text-slate-900 dark:text-white">Sneha Patel</h4>
                         <p className="text-[10px] text-slate-500">JEE Mains (99.2 Percentile)</p>
                       </div>
                     </div>
@@ -968,32 +968,32 @@ export default function PublicPages({
             <div className="space-y-6">
               
               {/* Quick Details card */}
-              <div className="bg-slate-900/50 p-6 rounded-3xl border border-slate-850 grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs text-slate-400">
+              <div className="bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs text-slate-600 dark:text-slate-400 shadow-sm">
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-white font-bold">
-                    <MapPin size={14} className="text-indigo-400" />
+                  <div className="flex items-center space-x-2 text-slate-900 dark:text-white font-bold">
+                    <MapPin size={14} className="text-indigo-600 dark:text-indigo-400" />
                     <span>OUR OFFICE</span>
                   </div>
                   <p>Main Road, Kudan, Katangi - 483105</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-white font-bold">
-                    <Phone size={14} className="text-indigo-400" />
+                  <div className="flex items-center space-x-2 text-slate-900 dark:text-white font-bold">
+                    <Phone size={14} className="text-indigo-600 dark:text-indigo-400" />
                     <span>PHONE / HELPLINE</span>
                   </div>
-                  <p className="text-slate-200 font-bold font-mono">+91 78289 08559</p>
+                  <p className="text-slate-800 dark:text-slate-200 font-bold font-mono">+91 78289 08559</p>
                   <p className="text-[10px] text-slate-500">Available Mon-Sat (9 AM - 8 PM)</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-white font-bold">
-                    <Mail size={14} className="text-indigo-400" />
+                  <div className="flex items-center space-x-2 text-slate-900 dark:text-white font-bold">
+                    <Mail size={14} className="text-indigo-600 dark:text-indigo-400" />
                     <span>EMAIL SUPPORT</span>
                   </div>
-                  <p className="text-slate-200 font-bold font-mono">arpitnema35@gmail.com</p>
+                  <p className="text-slate-800 dark:text-slate-200 font-bold font-mono">arpitnema35@gmail.com</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-slate-950 dark:text-white font-bold">
-                    <Calendar size={14} className="text-indigo-500" />
+                  <div className="flex items-center space-x-2 text-slate-900 dark:text-white font-bold">
+                    <Calendar size={14} className="text-indigo-600 dark:text-indigo-400" />
                     <span>VISITING HOURS</span>
                   </div>
                   <p>Monday - Saturday: 11:00 AM - 07:00 PM</p>

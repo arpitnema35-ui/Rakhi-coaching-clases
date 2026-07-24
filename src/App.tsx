@@ -500,7 +500,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] font-sans text-slate-100 flex flex-col justify-between transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50/90 via-orange-50/50 to-red-50/40 dark:from-[#0d0907] dark:via-[#140f0b] dark:to-[#1a100b] text-slate-900 dark:text-stone-100 font-sans flex flex-col justify-between transition-colors duration-300 relative selection:bg-orange-500 selection:text-white">
+      {/* 3D Liquid Ambient Glow Background Orbs */}
+      <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-orange-400/15 via-red-500/10 to-amber-300/10 dark:from-orange-600/20 dark:via-red-600/15 dark:to-amber-500/10 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse" style={{ animationDuration: '8s' }}></div>
+      <div className="fixed bottom-10 right-10 w-[600px] h-[600px] bg-gradient-to-tr from-red-500/15 via-amber-400/10 to-orange-500/15 dark:from-red-600/15 dark:via-orange-600/20 dark:to-amber-600/10 rounded-full blur-[140px] pointer-events-none -z-10 animate-pulse" style={{ animationDuration: '10s' }}></div>
       
       {/* 1. Header Navbar */}
       <Navbar

@@ -350,44 +350,44 @@ export default function OnlineTestSeries({
           
           {/* Main Listings Grid */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="border-b border-slate-800 pb-3">
-              <h2 className="text-lg font-bold text-white">Active Assessments</h2>
-              <p className="text-xs text-slate-400">Select any board-standard or competitive assessment below.</p>
+            <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Active Assessments</h2>
+              <p className="text-xs text-slate-600 dark:text-slate-400">Select any board-standard or competitive assessment below.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {testsList.map((test) => (
                 <div 
                   key={test.id}
-                  className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl shadow-md hover:border-slate-700 transition-all flex flex-col justify-between"
+                  className="bg-white/80 dark:bg-[#18110d]/70 backdrop-blur-xl border border-orange-200/80 dark:border-orange-900/40 p-6 rounded-3xl shadow-lg shadow-orange-500/5 hover:border-orange-400 dark:hover:border-orange-500/40 transition-all flex flex-col justify-between"
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="px-2 py-0.5 bg-indigo-500/10 text-indigo-300 text-[9px] font-mono font-bold rounded uppercase border border-indigo-500/25">
+                      <span className="px-2.5 py-0.5 bg-orange-50 dark:bg-orange-950/50 text-orange-700 dark:text-orange-300 text-[9px] font-mono font-bold rounded-lg uppercase border border-orange-200 dark:border-orange-900/30">
                         {test.subject}
                       </span>
-                      <div className="flex items-center space-x-1 text-slate-500 text-[10px] font-mono">
+                      <div className="flex items-center space-x-1 text-stone-500 dark:text-stone-400 text-[10px] font-mono">
                         <Clock size={11} />
                         <span>{test.durationMinutes} Min</span>
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <h3 className="font-extrabold text-sm text-white leading-tight">{test.title}</h3>
-                      <p className="text-[10px] text-slate-500">{test.grade} • {test.questions.length} Objective MCQs</p>
+                      <h3 className="font-extrabold text-sm text-slate-900 dark:text-white leading-tight">{test.title}</h3>
+                      <p className="text-[10px] text-stone-500 dark:text-stone-400">{test.grade} • {test.questions.length} Objective MCQs</p>
                     </div>
 
-                    <p className="text-xs text-slate-400">{test.description}</p>
+                    <p className="text-xs text-slate-600 dark:text-stone-300">{test.description}</p>
                   </div>
 
-                  <div className="border-t border-slate-800 pt-4 flex items-center justify-between mt-6">
+                  <div className="border-t border-orange-100 dark:border-orange-950/60 pt-4 flex items-center justify-between mt-6">
                     <div>
-                      <span className="text-[9px] text-slate-500 block font-bold">TOTAL MARKS</span>
-                      <span className="text-xs font-extrabold text-white font-mono">{test.totalMarks} Marks</span>
+                      <span className="text-[9px] text-stone-500 block font-bold">TOTAL MARKS</span>
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-white font-mono">{test.totalMarks} Marks</span>
                     </div>
                     <button
                       onClick={() => handleStartTest(test)}
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-md cursor-pointer transition-all"
+                      className="px-4 py-2 bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 hover:from-orange-600 hover:to-red-600 text-white text-xs font-extrabold rounded-xl shadow-md shadow-orange-500/25 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
                       Start Mock Test
                     </button>
@@ -399,25 +399,25 @@ export default function OnlineTestSeries({
 
           {/* Global Leaderboard Panel */}
           <div className="space-y-6">
-            <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl shadow-md space-y-4">
-              <div className="border-b border-slate-800 pb-3 flex items-center space-x-2">
+            <div className="bg-white/80 dark:bg-[#18110d]/70 backdrop-blur-xl border border-orange-200/80 dark:border-orange-900/40 p-6 rounded-3xl shadow-lg shadow-orange-500/5 space-y-4">
+              <div className="border-b border-orange-100 dark:border-orange-950/60 pb-3 flex items-center space-x-2">
                 <Trophy size={16} className="text-amber-500" />
-                <h3 className="font-bold text-sm text-white">Active Leaderboard</h3>
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Active Leaderboard</h3>
               </div>
 
               <div className="space-y-3">
                 {mockLeaderboard.map((student, idx) => (
                   <div key={idx} className="flex items-center justify-between text-xs py-1">
                     <div className="flex items-center space-x-3">
-                      <span className={`w-5 h-5 rounded-md flex items-center justify-center font-mono font-black text-[10px] ${idx === 0 ? 'bg-amber-500/20 text-amber-300' : idx === 1 ? 'bg-indigo-500/20 text-indigo-300' : 'bg-slate-800 text-slate-400'}`}>
+                      <span className={`w-5 h-5 rounded-md flex items-center justify-center font-mono font-black text-[10px] ${idx === 0 ? 'bg-gradient-to-tr from-amber-500 to-orange-500 text-white shadow-sm' : idx === 1 ? 'bg-gradient-to-tr from-orange-500 to-red-500 text-white shadow-sm' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300'}`}>
                         {student.rank}
                       </span>
                       <div>
-                        <h4 className="font-bold text-white">{student.name}</h4>
-                        <p className="text-[9px] text-slate-500">{student.grade}</p>
+                        <h4 className="font-bold text-slate-900 dark:text-white">{student.name}</h4>
+                        <p className="text-[9px] text-stone-500 dark:text-stone-400">{student.grade}</p>
                       </div>
                     </div>
-                    <span className="font-mono font-bold text-indigo-400">{student.score}</span>
+                    <span className="font-mono font-extrabold text-orange-600 dark:text-orange-400">{student.score}</span>
                   </div>
                 ))}
               </div>
