@@ -24,8 +24,8 @@ export default function NotFound({ setActiveTab }: NotFoundProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const popularRoutes = [
-    { title: 'Class 11th Study Notes', tab: 'class11', icon: FileText, desc: 'Physics, Chemistry, Maths & Biology handwritten summaries' },
-    { title: 'Class 12th Study Notes', tab: 'class12', icon: BookOpen, desc: 'Boards revision guides, organic reactions & calculus sheets' },
+    { title: 'Class 11th Commerce Notes', tab: 'class11', icon: FileText, desc: 'Accountancy, Economics & Business Studies handwritten summaries' },
+    { title: 'Class 12th Commerce Notes', tab: 'class12', icon: BookOpen, desc: 'Partnership accounts, macroeconomics & business case studies' },
   ];
 
   const handleSearchSubmit = (e: React.FormEvent) => {

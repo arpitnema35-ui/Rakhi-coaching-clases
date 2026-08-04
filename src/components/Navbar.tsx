@@ -44,8 +44,8 @@ export default function Navbar({
   const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   const navLinks = [
-    { id: 'class11', label: 'Class 11th Notes' },
-    { id: 'class12', label: 'Class 12th Notes' }
+    { id: 'class11', label: 'Class 11th Commerce' },
+    { id: 'class12', label: 'Class 12th Commerce' }
   ];
 
   const handleLinkClick = (id: string) => {

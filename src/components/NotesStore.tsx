@@ -185,14 +185,14 @@ export default function NotesStore({
             <span>Rakhi Coaching • Verified Faculty Notes</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            {gradeFilter === 'Class 11' ? 'Class 11th Handwritten & Formula Notes' :
-             gradeFilter === 'Class 12' ? 'Class 12th Board & Competitive Notes' :
-             'Revision Notes & Formula Store'}
+            {gradeFilter === 'Class 11' ? 'Class 11th Commerce Handwritten Notes & Formula Guides' :
+             gradeFilter === 'Class 12' ? 'Class 12th Commerce Board Notes & Case Studies' :
+             'Commerce Revision Notes & Case Studies Store'}
           </h1>
           <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
-            {gradeFilter === 'Class 11' ? 'High-yield chapter summaries, formula vectors, solved board papers & entrance shortcuts for Class 11 Physics, Chemistry, Mathematics & Biology.' :
-             gradeFilter === 'Class 12' ? 'Complete CBSE & State board quick revision guides, organic mechanism flowcharts, electrostatics formula sheets & NEET/JEE PYQs for Class 12.' :
-             'Unlock premium high-yield revision summaries built for Class 9-12 Boards, JEE & NEET.'}
+            {gradeFilter === 'Class 11' ? 'High-yield chapter summaries, financial statements mindmaps, microeconomics graphs & business studies revision guides for Class 11 Commerce.' :
+             gradeFilter === 'Class 12' ? 'Partnership accounts formulas, macroeconomics diagrams, business management principles & board 10-year solved papers for Class 12 Commerce.' :
+             'Unlock premium high-yield revision summaries built for Class 11 & 12 Commerce Board Exams.'}
           </p>
         </div>
 
@@ -224,10 +224,9 @@ export default function NotesStore({
         <div className="flex items-center space-x-2 overflow-x-auto w-full sm:w-auto">
           {[
             { id: 'all', label: 'All Subjects' },
-            { id: 'math', label: 'Mathematics' },
-            { id: 'physics', label: 'Physics' },
-            { id: 'chemistry', label: 'Chemistry' },
-            { id: 'biology', label: 'Biology' },
+            { id: 'accountancy', label: 'Accountancy' },
+            { id: 'economics', label: 'Economics' },
+            { id: 'business', label: 'Business Studies' },
           ].map((cat) => (
             <button
               key={cat.id}
