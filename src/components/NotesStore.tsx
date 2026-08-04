@@ -26,6 +26,7 @@ interface NotesStoreProps {
   onCheckoutComplete: (order: Omit<Order, 'id' | 'createdAt' | 'status'>) => Promise<string>;
   user: UserProfile | null;
   onLoginClick: () => void;
+  gradeFilter?: string;
 }
 
 export default function NotesStore({
@@ -36,7 +37,8 @@ export default function NotesStore({
   setIsCartOpen,
   onCheckoutComplete,
   user,
-  onLoginClick
+  onLoginClick,
+  gradeFilter
 }: NotesStoreProps) {
   
   // States
@@ -142,27 +144,61 @@ export default function NotesStore({
   };
 
   const filteredNotes = notesList.filter(note => {
+    if (gradeFilter) {
+      const g = note.grade.toLowerCase();
+      const targetG = gradeFilter.toLowerCase(); // e.g. "class 11" or "class 12"
+      if (!g.includes(targetG) && !g.includes(targetG.replace('class ', '11')) && !g.includes(targetG.replace('class ', '12'))) {
+        return false;
+      }
+    }
+
     const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          note.subject.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || note.category.toLowerCase().includes(selectedCategory.toLowerCase());
+                          note.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          note.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || 
+                            note.category.toLowerCase().includes(selectedCategory.toLowerCase()) ||
+                            note.subject.toLowerCase().includes(selectedCategory.toLowerCase());
     return matchesSearch && matchesCategory;
   });
+
+  // Sample PDF Download simulation
+  const handleDownloadSamplePdf = (note: Note) => {
+    const sampleContent = `%PDF-1.5 Sample Note Preview: ${note.title}\nSubject: ${note.subject}\nGrade: ${note.grade}\nTeacher: Prof. Rakhi Nema\nWebsite: Rakhi Coaching Classes\n\nKey Concepts Covered:\n- Chapter Quick Summary & Mindmaps\n- High-Yield Formula Vectors\n- Solved Board Questions & PYQs\n`;
+    const blob = new Blob([sampleContent], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${note.title.replace(/[^a-zA-Z0-0]/g, '_')}_Sample.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div id="notes-store-container" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Revision Notes Store</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            Unlock premium high-yield revision summaries built for Class 9-12 Boards, JEE & NEET.
+      <div className="bg-gradient-to-r from-orange-500/15 via-red-500/10 to-amber-500/15 dark:from-orange-950/40 dark:via-red-950/30 dark:to-amber-950/30 border border-orange-300/80 dark:border-orange-500/30 p-6 sm:p-8 rounded-3xl backdrop-blur-xl shadow-xl shadow-orange-500/5 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2 max-w-2xl">
+          <div className="inline-flex items-center space-x-2 px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-full text-orange-600 dark:text-orange-400 text-[10px] font-mono font-extrabold uppercase tracking-wider">
+            <Award size={12} className="text-amber-500" />
+            <span>Rakhi Coaching • Verified Faculty Notes</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            {gradeFilter === 'Class 11' ? 'Class 11th Handwritten & Formula Notes' :
+             gradeFilter === 'Class 12' ? 'Class 12th Board & Competitive Notes' :
+             'Revision Notes & Formula Store'}
+          </h1>
+          <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
+            {gradeFilter === 'Class 11' ? 'High-yield chapter summaries, formula vectors, solved board papers & entrance shortcuts for Class 11 Physics, Chemistry, Mathematics & Biology.' :
+             gradeFilter === 'Class 12' ? 'Complete CBSE & State board quick revision guides, organic mechanism flowcharts, electrostatics formula sheets & NEET/JEE PYQs for Class 12.' :
+             'Unlock premium high-yield revision summaries built for Class 9-12 Boards, JEE & NEET.'}
           </p>
         </div>
 
         {/* Promo code notice banner */}
-        <div className="bg-gradient-to-r from-orange-500/15 via-red-500/10 to-amber-500/15 dark:from-orange-950/40 dark:via-red-950/30 dark:to-amber-950/30 border border-orange-300/80 dark:border-orange-500/30 p-3.5 rounded-2xl flex items-center space-x-3 text-xs shrink-0 shadow-sm backdrop-blur-md">
-          <Tag size={16} className="text-orange-600 dark:text-orange-400 animate-pulse" />
+        <div className="bg-white/80 dark:bg-[#18110d]/80 border border-orange-300 dark:border-orange-800/60 p-4 rounded-2xl flex items-center space-x-3 text-xs shrink-0 shadow-md">
+          <Tag size={18} className="text-orange-600 dark:text-orange-400 animate-pulse shrink-0" />
           <div>
             <p className="font-extrabold text-slate-900 dark:text-white">Use Coupon: <span className="text-orange-600 dark:text-orange-400 font-mono font-black">SCOREMAX</span></p>
             <p className="text-[10px] text-stone-600 dark:text-stone-400">Get flat 20% off on study bills above ₹200</p>

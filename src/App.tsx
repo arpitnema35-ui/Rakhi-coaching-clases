@@ -54,7 +54,7 @@ import NotFound from './components/NotFound';
 export default function App() {
   
   // App States
-  const [activeTab, setActiveTab] = useState<string>('notes');
+  const [activeTab, setActiveTab] = useState<string>('class11');
   const [activeDashboardTab, setActiveDashboardTab] = useState<string>('overview');
   const [darkMode, setDarkMode] = useState<boolean>(true);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
@@ -127,46 +127,147 @@ export default function App() {
   ];
 
   const fallbackNotes: Note[] = [
+    // --- CLASS 11TH NOTES ---
     {
-      id: 'note_10_math_trigo',
-      title: 'Class 10 Trigonometry Formula Sheet & Solved PYQs',
-      description: 'Complete high-yield quick summary containing all key trigonometric identities, shortcut formula vectors, and 10 years of boards solved papers.',
+      id: 'note_11_phys_kinematics',
+      title: 'Class 11 Physics: Kinematics & Laws of Motion Master Notes',
+      description: 'Handwritten chapter summaries compiled by Prof. Rakhi Nema covering 1D/2D vectors, projectile motion, Newton\'s laws diagrams, friction equations & solved board PYQs.',
       price: 149,
-      category: 'Maths',
-      subject: 'Mathematics',
-      grade: 'Class 10',
-      pdfUrl: 'class_10_trigo_formulas.pdf',
-      pagesCount: 12,
+      category: 'Physics',
+      subject: 'Physics',
+      grade: 'Class 11',
+      pdfUrl: 'class_11_kinematics_summary.pdf',
+      pagesCount: 16,
       rating: 4.9,
-      downloadsCount: 184,
+      downloadsCount: 280,
       createdAt: new Date().toISOString()
     },
     {
+      id: 'note_11_chem_bonding',
+      title: 'Class 11 Chemistry: Chemical Bonding & Structure Cheatsheet',
+      description: 'VSEPR theory shapes, Hybridization tables, Molecular Orbital (MOT) diagrams, dipole moments & high-yield NCERT formula cheatsheet.',
+      price: 129,
+      category: 'Chemistry',
+      subject: 'Chemistry',
+      grade: 'Class 11',
+      pdfUrl: 'class_11_bonding_cheatsheet.pdf',
+      pagesCount: 14,
+      rating: 4.8,
+      downloadsCount: 215,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'note_11_math_trigo',
+      title: 'Class 11 Maths: Sets, Relations & Trigonometry Formula Sheet',
+      description: 'Complete trigonometric identity transformations, domain-range tables, set theory Venn diagrams, sequence & series shortcuts.',
+      price: 149,
+      category: 'Maths',
+      subject: 'Mathematics',
+      grade: 'Class 11',
+      pdfUrl: 'class_11_trigo_formulas.pdf',
+      pagesCount: 18,
+      rating: 4.9,
+      downloadsCount: 340,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'note_11_bio_physio',
+      title: 'Class 11 Biology: Human Physiology & Cell Biology Diagrams',
+      description: 'NCERT labelled diagrams, digestion, respiration, neural control notes with NEET assertion-reason questions and memory mindmaps.',
+      price: 139,
+      category: 'Biology',
+      subject: 'Biology',
+      grade: 'Class 11',
+      pdfUrl: 'class_11_cell_biology_notes.pdf',
+      pagesCount: 20,
+      rating: 4.9,
+      downloadsCount: 290,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'note_11_phys_thermo',
+      title: 'Class 11 Physics: Thermodynamics & Thermal Properties',
+      description: 'Carnot engine cycles, Laws of thermodynamics, heat transfer equations & kinetic theory formulas with numerical derivations.',
+      price: 119,
+      category: 'Physics',
+      subject: 'Physics',
+      grade: 'Class 11',
+      pdfUrl: 'class_11_thermodynamics.pdf',
+      pagesCount: 12,
+      rating: 4.7,
+      downloadsCount: 175,
+      createdAt: new Date().toISOString()
+    },
+
+    // --- CLASS 12TH NOTES ---
+    {
       id: 'note_12_phys_electro',
-      title: 'Class 12 Electromagnetism & Waves Quick Revision Notes',
-      description: 'Handwritten chapter summaries compiled by Prof. Rakhi Nema covering Gauss Law, electromagnetic inductions, and optics shortcuts.',
-      price: 249,
+      title: 'Class 12 Physics: Electrostatics & Current Electricity Notes',
+      description: 'Coulomb\'s Law, Gauss Theorem derivations, Kirchhoff\'s laws, potentiometer numericals & CBSE board 5-marker answer sheets.',
+      price: 199,
       category: 'Physics',
       subject: 'Physics',
       grade: 'Class 12',
       pdfUrl: 'class_12_electromagnetism_summary.pdf',
       pagesCount: 22,
-      rating: 4.8,
-      downloadsCount: 320,
+      rating: 5.0,
+      downloadsCount: 450,
       createdAt: new Date().toISOString()
     },
     {
-      id: 'note_neet_chem_mechanisms',
-      title: 'NEET Organic Chemistry Reaction Mechanisms PYQs',
-      description: 'Exclusive flowchart summary sheets detailing SN1/SN2 reactions, Grignard additions, and named conversions for prompt competitive score increments.',
-      price: 299,
+      id: 'note_12_chem_organic',
+      title: 'Class 12 Chemistry: Organic Reaction Mechanisms Flowchart',
+      description: 'Complete SN1, SN2, Aldol condensation, Cannizzaro, Reimer-Tiemann reactions with step-by-step mechanisms and roadmap conversions.',
+      price: 199,
       category: 'Chemistry',
       subject: 'Chemistry',
-      grade: 'NEET Target',
-      pdfUrl: 'neet_organic_reactions_cheatsheet.pdf',
+      grade: 'Class 12',
+      pdfUrl: 'class_12_organic_reactions_cheatsheet.pdf',
+      pagesCount: 25,
+      rating: 4.9,
+      downloadsCount: 410,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'note_12_math_calculus',
+      title: 'Class 12 Maths: Calculus (Differentiation & Integration) Sheet',
+      description: 'Standard integrals, integration by parts, substitution shortcuts, differential equations & area under curve 10-year board solutions.',
+      price: 179,
+      category: 'Maths',
+      subject: 'Mathematics',
+      grade: 'Class 12',
+      pdfUrl: 'class_12_calculus_master.pdf',
+      pagesCount: 24,
+      rating: 4.9,
+      downloadsCount: 480,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'note_12_bio_genetics',
+      title: 'Class 12 Biology: Genetics, DNA & Biotechnology Notes',
+      description: 'Mendelian inheritance pedigree charts, DNA replication flow, PCR steps, recombinant DNA technology diagrams & NCERT summaries.',
+      price: 169,
+      category: 'Biology',
+      subject: 'Biology',
+      grade: 'Class 12',
+      pdfUrl: 'class_12_genetics_notes.pdf',
+      pagesCount: 28,
+      rating: 4.9,
+      downloadsCount: 330,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'note_12_phys_optics',
+      title: 'Class 12 Physics: Ray Optics & Modern Physics Revision Guide',
+      description: 'Ray optics ray diagrams, Wave optics interference, Photoelectric effect graphs & Semiconductor diodes notes compiled for quick revision.',
+      price: 159,
+      category: 'Physics',
+      subject: 'Physics',
+      grade: 'Class 12',
+      pdfUrl: 'class_12_optics_notes.pdf',
       pagesCount: 18,
-      rating: 5.0,
-      downloadsCount: 142,
+      rating: 4.8,
+      downloadsCount: 310,
       createdAt: new Date().toISOString()
     }
   ];
@@ -311,7 +412,7 @@ export default function App() {
   // 4. Route Hash & Path Synchronization with 404 Fallback
   useEffect(() => {
     const validTabs = [
-      'notes', 'notes-store', 'lectures', 'feedback', 
+      'class11', 'class12', 'notes', 'notes-store',
       'privacy', 'terms', 'faq', 'admin-panel'
     ];
 
@@ -553,8 +654,8 @@ export default function App() {
       {/* 2. Main Tab View Dispatcher */}
       <main className="flex-1 pb-16">
         
-        {/* Notes Store / Notes Page View */}
-        {(activeTab === 'notes' || activeTab === 'notes-store') && (
+        {/* Class 11th Notes Page View */}
+        {(activeTab === 'class11' || activeTab === 'notes' || activeTab === 'notes-store') && (
           <NotesStore
             notesList={notesList}
             cart={cart}
@@ -564,22 +665,22 @@ export default function App() {
             onCheckoutComplete={handleCheckoutComplete}
             user={user}
             onLoginClick={() => setLoginModalOpen(true)}
+            gradeFilter="Class 11"
           />
         )}
 
-        {/* Lectures Page View */}
-        {activeTab === 'lectures' && (
-          <LecturesPage
-            setActiveTab={setActiveTab}
-            userEmail={user?.email}
-          />
-        )}
-
-        {/* Feedback Page View */}
-        {activeTab === 'feedback' && (
-          <FeedbackPage
-            userEmail={user?.email}
-            userName={user?.displayName}
+        {/* Class 12th Notes Page View */}
+        {activeTab === 'class12' && (
+          <NotesStore
+            notesList={notesList}
+            cart={cart}
+            setCart={setCart}
+            isCartOpen={isCartOpen}
+            setIsCartOpen={setIsCartOpen}
+            onCheckoutComplete={handleCheckoutComplete}
+            user={user}
+            onLoginClick={() => setLoginModalOpen(true)}
+            gradeFilter="Class 12"
           />
         )}
 
@@ -640,7 +741,7 @@ export default function App() {
 
         {/* 404 Custom Interactive Page for Non-existent Routes */}
         {(activeTab === '404' || (
-          !['notes', 'notes-store', 'lectures', 'feedback', 'privacy', 'terms', 'faq', 'admin-panel'].includes(activeTab) && 
+          !['class11', 'class12', 'notes', 'notes-store', 'privacy', 'terms', 'faq', 'admin-panel'].includes(activeTab) && 
           !activeTab.startsWith('dashboard-')
         )) && (
           <NotFound setActiveTab={setActiveTab} />

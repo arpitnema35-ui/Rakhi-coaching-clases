@@ -24,23 +24,18 @@ export default function NotFound({ setActiveTab }: NotFoundProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const popularRoutes = [
-    { title: 'Digital PDF Notes Store', tab: 'notes', icon: FileText, desc: 'Download formula guides, chapter summaries & solved papers' },
-    { title: 'Video Lectures & Masterclasses', tab: 'lectures', icon: BookOpen, desc: 'Watch concept video lectures & batch classes' },
-    { title: 'Student Feedback Form', tab: 'feedback', icon: HelpCircle, desc: 'Share your feedback, ratings & suggestions' },
+    { title: 'Class 11th Study Notes', tab: 'class11', icon: FileText, desc: 'Physics, Chemistry, Maths & Biology handwritten summaries' },
+    { title: 'Class 12th Study Notes', tab: 'class12', icon: BookOpen, desc: 'Boards revision guides, organic reactions & calculus sheets' },
   ];
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     const q = searchQuery.toLowerCase();
-    if (q.includes('note') || q.includes('pdf') || q.includes('book') || q.includes('store')) {
-      setActiveTab('notes');
-    } else if (q.includes('lecture') || q.includes('video') || q.includes('class') || q.includes('batch')) {
-      setActiveTab('lectures');
-    } else if (q.includes('feedback') || q.includes('review') || q.includes('rating') || q.includes('suggestion')) {
-      setActiveTab('feedback');
+    if (q.includes('12')) {
+      setActiveTab('class12');
     } else {
-      setActiveTab('notes');
+      setActiveTab('class11');
     }
   };
 
@@ -176,19 +171,19 @@ export default function NotFound({ setActiveTab }: NotFoundProps) {
         {/* Action Controls */}
         <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
           <button
-            onClick={() => setActiveTab('notes')}
+            onClick={() => setActiveTab('class11')}
             className="px-6 py-3 bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 hover:from-orange-600 hover:to-red-600 text-white rounded-2xl text-xs font-extrabold flex items-center space-x-2 shadow-lg shadow-orange-500/25 transition-all hover:scale-[1.03] active:scale-[0.97] cursor-pointer"
           >
             <Home size={16} />
-            <span>Go to Notes Store</span>
+            <span>Class 11th Notes</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('feedback')}
+            onClick={() => setActiveTab('class12')}
             className="px-6 py-3 bg-white dark:bg-[#18110d] border border-orange-200 dark:border-orange-900/50 hover:border-orange-400 text-slate-800 dark:text-stone-200 rounded-2xl text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer shadow-sm"
           >
-            <HelpCircle size={16} className="text-orange-500" />
-            <span>Submit Feedback</span>
+            <BookOpen size={16} className="text-orange-500" />
+            <span>Class 12th Notes</span>
           </button>
         </div>
 
