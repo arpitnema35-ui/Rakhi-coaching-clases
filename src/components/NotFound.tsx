@@ -24,26 +24,23 @@ export default function NotFound({ setActiveTab }: NotFoundProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const popularRoutes = [
-    { title: 'Classroom Courses & Batches', tab: 'courses', icon: BookOpen, desc: 'Class 8-12, Board, JEE & NEET Batches' },
-    { title: 'Digital PDF Notes Store', tab: 'notes-store', icon: FileText, desc: 'Download formula guides & solved papers' },
-    { title: 'Online Mock Test Series', tab: 'test-series', icon: Award, desc: 'Practice MCQs with instant scoring' },
-    { title: 'Help & FAQs', tab: 'faq', icon: HelpCircle, desc: 'Get answers to common queries' },
+    { title: 'Digital PDF Notes Store', tab: 'notes', icon: FileText, desc: 'Download formula guides, chapter summaries & solved papers' },
+    { title: 'Video Lectures & Masterclasses', tab: 'lectures', icon: BookOpen, desc: 'Watch concept video lectures & batch classes' },
+    { title: 'Student Feedback Form', tab: 'feedback', icon: HelpCircle, desc: 'Share your feedback, ratings & suggestions' },
   ];
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     const q = searchQuery.toLowerCase();
-    if (q.includes('note') || q.includes('pdf') || q.includes('book')) {
-      setActiveTab('notes-store');
-    } else if (q.includes('test') || q.includes('mcq') || q.includes('quiz')) {
-      setActiveTab('test-series');
-    } else if (q.includes('batch') || q.includes('course') || q.includes('class') || q.includes('jee') || q.includes('neet')) {
-      setActiveTab('courses');
-    } else if (q.includes('contact') || q.includes('phone') || q.includes('address')) {
-      setActiveTab('contact');
+    if (q.includes('note') || q.includes('pdf') || q.includes('book') || q.includes('store')) {
+      setActiveTab('notes');
+    } else if (q.includes('lecture') || q.includes('video') || q.includes('class') || q.includes('batch')) {
+      setActiveTab('lectures');
+    } else if (q.includes('feedback') || q.includes('review') || q.includes('rating') || q.includes('suggestion')) {
+      setActiveTab('feedback');
     } else {
-      setActiveTab('home');
+      setActiveTab('notes');
     }
   };
 
@@ -179,19 +176,19 @@ export default function NotFound({ setActiveTab }: NotFoundProps) {
         {/* Action Controls */}
         <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
           <button
-            onClick={() => setActiveTab('home')}
+            onClick={() => setActiveTab('notes')}
             className="px-6 py-3 bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 hover:from-orange-600 hover:to-red-600 text-white rounded-2xl text-xs font-extrabold flex items-center space-x-2 shadow-lg shadow-orange-500/25 transition-all hover:scale-[1.03] active:scale-[0.97] cursor-pointer"
           >
             <Home size={16} />
-            <span>Return to Homepage</span>
+            <span>Go to Notes Store</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('contact')}
+            onClick={() => setActiveTab('feedback')}
             className="px-6 py-3 bg-white dark:bg-[#18110d] border border-orange-200 dark:border-orange-900/50 hover:border-orange-400 text-slate-800 dark:text-stone-200 rounded-2xl text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer shadow-sm"
           >
-            <PhoneCall size={16} className="text-orange-500" />
-            <span>Contact Support</span>
+            <HelpCircle size={16} className="text-orange-500" />
+            <span>Submit Feedback</span>
           </button>
         </div>
 

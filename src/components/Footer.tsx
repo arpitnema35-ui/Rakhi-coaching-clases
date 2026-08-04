@@ -39,65 +39,34 @@ export default function Footer({ setActiveTab }: FooterProps) {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-slate-900 dark:text-white font-extrabold text-sm tracking-wider uppercase mb-4">Quick Links</h3>
+            <h3 className="text-slate-900 dark:text-white font-extrabold text-sm tracking-wider uppercase mb-4">Quick Pages</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <button onClick={() => setActiveTab('home')} className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                  Home Page
+                <button onClick={() => setActiveTab('notes')} className="hover:text-orange-600 dark:hover:text-orange-400 font-bold transition-colors cursor-pointer">
+                  Notes Store & PDFs
                 </button>
               </li>
               <li>
-                <button onClick={() => setActiveTab('about')} className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                  About Us
+                <button onClick={() => setActiveTab('lectures')} className="hover:text-orange-600 dark:hover:text-orange-400 font-bold transition-colors cursor-pointer">
+                  Video Lectures & Classes
                 </button>
               </li>
               <li>
-                <button onClick={() => setActiveTab('courses')} className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                  Courses
-                </button>
-              </li>
-              <li>
-                <button onClick={() => setActiveTab('faculty')} className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                  Expert Faculty
-                </button>
-              </li>
-              <li>
-                <button onClick={() => setActiveTab('timetable')} className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                  Class Timetable
+                <button onClick={() => setActiveTab('feedback')} className="hover:text-orange-600 dark:hover:text-orange-400 font-bold transition-colors cursor-pointer">
+                  Student Feedback Form
                 </button>
               </li>
             </ul>
           </div>
 
-          {/* Offerings */}
+          {/* Director & Institute Details */}
           <div>
-            <h3 className="text-slate-900 dark:text-white font-extrabold text-sm tracking-wider uppercase mb-4">Offerings</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <button onClick={() => setActiveTab('notes-store')} className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                  Notes Store
-                </button>
-              </li>
-              <li>
-                <button onClick={() => setActiveTab('test-series')} className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                  Online Test Series
-                </button>
-              </li>
-              <li>
-                <button onClick={() => setActiveTab('blog')} className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                  Educational Blog
-                </button>
-              </li>
-              <li>
-                <button onClick={() => setActiveTab('faq')} className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                  FAQs & Support
-                </button>
-              </li>
-              <li>
-                <button onClick={() => setActiveTab('contact')} className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
-                  Contact Us
-                </button>
-              </li>
+            <h3 className="text-slate-900 dark:text-white font-extrabold text-sm tracking-wider uppercase mb-4">Leadership</h3>
+            <ul className="space-y-2 text-sm text-stone-600 dark:text-stone-300">
+              <li><strong>Director:</strong> Arpit Nema</li>
+              <li><strong>Coaching:</strong> Rakhi Coaching Classes</li>
+              <li><strong>Coverage:</strong> All India Online & MP Offlines</li>
+              <li><strong>Support:</strong> 24x7 Student Helpdesk</li>
             </ul>
           </div>
 

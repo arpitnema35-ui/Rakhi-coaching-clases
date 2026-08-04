@@ -44,6 +44,8 @@ import Footer from './components/Footer';
 import WhatsAppButton from './components/WhatsAppButton';
 import PublicPages from './components/PublicPages';
 import NotesStore from './components/NotesStore';
+import LecturesPage from './components/LecturesPage';
+import FeedbackPage from './components/FeedbackPage';
 import OnlineTestSeries from './components/OnlineTestSeries';
 import StudentDashboard from './components/StudentDashboard';
 import AdminPanel from './components/AdminPanel';
@@ -52,7 +54,7 @@ import NotFound from './components/NotFound';
 export default function App() {
   
   // App States
-  const [activeTab, setActiveTab] = useState<string>('home');
+  const [activeTab, setActiveTab] = useState<string>('notes');
   const [activeDashboardTab, setActiveDashboardTab] = useState<string>('overview');
   const [darkMode, setDarkMode] = useState<boolean>(true);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
@@ -309,8 +311,8 @@ export default function App() {
   // 4. Route Hash & Path Synchronization with 404 Fallback
   useEffect(() => {
     const validTabs = [
-      'home', 'about', 'courses', 'faculty', 'timetable', 'blog', 'contact', 
-      'privacy', 'terms', 'faq', 'sitemap', 'notes-store', 'test-series', 'admin-panel'
+      'notes', 'notes-store', 'lectures', 'feedback', 
+      'privacy', 'terms', 'faq', 'admin-panel'
     ];
 
     const syncRouteWithTab = () => {
@@ -551,24 +553,8 @@ export default function App() {
       {/* 2. Main Tab View Dispatcher */}
       <main className="flex-1 pb-16">
         
-        {/* Core Public Views (Home, About, Courses, Faculty, Timetable, Blogs, Contact, Legal, Sitemap) */}
-        {['home', 'about', 'courses', 'faculty', 'timetable', 'blog', 'contact', 'privacy', 'terms', 'faq', 'sitemap'].includes(activeTab) && (
-          <PublicPages
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            coursesList={coursesList}
-            setCoursesList={setCoursesList}
-            teachersList={fallbackTeachers}
-            blogsList={blogsList}
-            setBlogsList={setBlogsList}
-            onSubmitAdmission={handleSubmitAdmission}
-            onSubmitContact={handleSubmitContact}
-            userEmail={user?.email}
-          />
-        )}
-
-        {/* Notes Store View */}
-        {activeTab === 'notes-store' && (
+        {/* Notes Store / Notes Page View */}
+        {(activeTab === 'notes' || activeTab === 'notes-store') && (
           <NotesStore
             notesList={notesList}
             cart={cart}
@@ -581,14 +567,35 @@ export default function App() {
           />
         )}
 
-        {/* Test Series View */}
-        {activeTab === 'test-series' && (
-          <OnlineTestSeries
-            testsList={testsList}
-            user={user}
-            onSaveResult={handleSaveResult}
-            onLoginClick={() => setLoginModalOpen(true)}
-            resultsList={resultsList}
+        {/* Lectures Page View */}
+        {activeTab === 'lectures' && (
+          <LecturesPage
+            setActiveTab={setActiveTab}
+            userEmail={user?.email}
+          />
+        )}
+
+        {/* Feedback Page View */}
+        {activeTab === 'feedback' && (
+          <FeedbackPage
+            userEmail={user?.email}
+            userName={user?.displayName}
+          />
+        )}
+
+        {/* Legal & Static Public Views if requested from footer */}
+        {['privacy', 'terms', 'faq'].includes(activeTab) && (
+          <PublicPages
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            coursesList={coursesList}
+            setCoursesList={setCoursesList}
+            teachersList={fallbackTeachers}
+            blogsList={blogsList}
+            setBlogsList={setBlogsList}
+            onSubmitAdmission={handleSubmitAdmission}
+            onSubmitContact={handleSubmitContact}
+            userEmail={user?.email}
           />
         )}
 
@@ -633,7 +640,7 @@ export default function App() {
 
         {/* 404 Custom Interactive Page for Non-existent Routes */}
         {(activeTab === '404' || (
-          !['home', 'about', 'courses', 'faculty', 'timetable', 'blog', 'contact', 'privacy', 'terms', 'faq', 'sitemap', 'notes-store', 'test-series', 'admin-panel'].includes(activeTab) && 
+          !['notes', 'notes-store', 'lectures', 'feedback', 'privacy', 'terms', 'faq', 'admin-panel'].includes(activeTab) && 
           !activeTab.startsWith('dashboard-')
         )) && (
           <NotFound setActiveTab={setActiveTab} />

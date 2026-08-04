@@ -175,6 +175,35 @@ export interface FAQItem {
   answer: string;
 }
 
+export interface Lecture {
+  id: string;
+  title: string;
+  description: string;
+  subject: string;
+  grade: string;
+  videoUrl: string;
+  duration: string;
+  teacherName: string;
+  thumbnail: string;
+  chapter: string;
+  isFree: boolean;
+  viewsCount: number;
+  pdfNotesId?: string;
+  createdAt: string;
+}
+
+export interface Feedback {
+  id: string;
+  studentName: string;
+  email: string;
+  grade?: string;
+  rating: number;
+  category: string;
+  message: string;
+  recommend: boolean;
+  createdAt: string;
+}
+
 export interface AppSettings {
   websiteName: string;
   tagline: string;

@@ -44,12 +44,9 @@ export default function Navbar({
   const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   const navLinks = [
-    { id: 'home', label: 'Home' },
-    { id: 'courses', label: 'Courses' },
-    { id: 'notes-store', label: 'Notes Store' },
-    { id: 'test-series', label: 'Test Series' },
-    { id: 'blog', label: 'Blog' },
-    { id: 'contact', label: 'Contact Us' }
+    { id: 'notes', label: 'Notes' },
+    { id: 'lectures', label: 'Lectures' },
+    { id: 'feedback', label: 'Feedback' }
   ];
 
   const handleLinkClick = (id: string) => {
@@ -64,7 +61,7 @@ export default function Navbar({
           
           {/* Logo */}
           <div 
-            onClick={() => handleLinkClick('home')} 
+            onClick={() => handleLinkClick('notes')} 
             className="flex items-center space-x-3 cursor-pointer group"
           >
             <div className="bg-gradient-to-tr from-orange-500 via-red-500 to-amber-500 w-10 h-10 rounded-xl text-white flex items-center justify-center font-black text-xl shadow-lg shadow-orange-500/30 group-hover:scale-105 transition-transform">
