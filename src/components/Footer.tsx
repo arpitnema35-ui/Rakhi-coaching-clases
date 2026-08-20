@@ -39,13 +39,8 @@ export default function Footer({ setActiveTab }: FooterProps) {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-slate-900 dark:text-white font-extrabold text-sm tracking-wider uppercase mb-4">Commerce Notes Pages</h3>
+            <h3 className="text-slate-900 dark:text-white font-extrabold text-sm tracking-wider uppercase mb-4">Commerce Notes</h3>
             <ul className="space-y-2 text-sm">
-              <li>
-                <button onClick={() => setActiveTab('class11')} className="hover:text-orange-600 dark:hover:text-orange-400 font-bold transition-colors cursor-pointer">
-                  Class 11th Commerce Notes
-                </button>
-              </li>
               <li>
                 <button onClick={() => setActiveTab('class12')} className="hover:text-orange-600 dark:hover:text-orange-400 font-bold transition-colors cursor-pointer">
                   Class 12th Commerce Notes

@@ -44,8 +44,7 @@ export default function Navbar({
   const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   const navLinks = [
-    { id: 'class11', label: 'Class 11th Commerce' },
-    { id: 'class12', label: 'Class 12th Commerce' }
+    { id: 'class12', label: 'Class 12th Commerce Notes' }
   ];
 
   const handleLinkClick = (id: string) => {
@@ -60,17 +59,17 @@ export default function Navbar({
           
           {/* Logo */}
           <div 
-            onClick={() => handleLinkClick('class11')} 
-            className="flex items-center space-x-3 cursor-pointer group"
+            onClick={() => handleLinkClick('class12')} 
+            className="flex items-center space-x-2.5 cursor-pointer group min-w-0 shrink"
           >
-            <div className="bg-gradient-to-tr from-orange-500 via-red-500 to-amber-500 w-10 h-10 rounded-xl text-white flex items-center justify-center font-black text-xl shadow-lg shadow-orange-500/30 group-hover:scale-105 transition-transform">
+            <div className="bg-gradient-to-tr from-orange-500 via-red-500 to-amber-500 w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-white flex items-center justify-center font-black text-lg sm:text-xl shadow-lg shadow-orange-500/30 group-hover:scale-105 transition-transform shrink-0">
               R
             </div>
-            <div>
-              <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-stone-100 block">
+            <div className="min-w-0">
+              <span className="font-extrabold text-sm sm:text-lg tracking-tight text-slate-900 dark:text-stone-100 block truncate">
                 Rakhi Coaching
               </span>
-              <span className="text-[10px] text-orange-600 dark:text-orange-400 block -mt-0.5 uppercase tracking-widest font-bold">
+              <span className="text-[8px] sm:text-[10px] text-orange-600 dark:text-orange-400 block -mt-0.5 uppercase tracking-wider font-bold truncate">
                 Learn Smart, Score Better
               </span>
             </div>
@@ -216,7 +215,7 @@ export default function Navbar({
             ) : (
               <button
                 onClick={onLoginClick}
-                className="px-5 py-2 text-sm font-extrabold bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 hover:from-orange-600 hover:to-red-600 rounded-full shadow-lg shadow-orange-500/25 text-white transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                className="px-3 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-extrabold bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 hover:from-orange-600 hover:to-red-600 rounded-full shadow-lg shadow-orange-500/25 text-white transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] shrink-0"
               >
                 Get Started
               </button>

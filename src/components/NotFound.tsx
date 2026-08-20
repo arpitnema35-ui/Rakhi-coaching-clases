@@ -24,19 +24,12 @@ export default function NotFound({ setActiveTab }: NotFoundProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const popularRoutes = [
-    { title: 'Class 11th Commerce Notes', tab: 'class11', icon: FileText, desc: 'Accountancy, Economics & Business Studies handwritten summaries' },
     { title: 'Class 12th Commerce Notes', tab: 'class12', icon: BookOpen, desc: 'Partnership accounts, macroeconomics & business case studies' },
   ];
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
-    const q = searchQuery.toLowerCase();
-    if (q.includes('12')) {
-      setActiveTab('class12');
-    } else {
-      setActiveTab('class11');
-    }
+    setActiveTab('class12');
   };
 
   return (
@@ -171,19 +164,11 @@ export default function NotFound({ setActiveTab }: NotFoundProps) {
         {/* Action Controls */}
         <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
           <button
-            onClick={() => setActiveTab('class11')}
+            onClick={() => setActiveTab('class12')}
             className="px-6 py-3 bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 hover:from-orange-600 hover:to-red-600 text-white rounded-2xl text-xs font-extrabold flex items-center space-x-2 shadow-lg shadow-orange-500/25 transition-all hover:scale-[1.03] active:scale-[0.97] cursor-pointer"
           >
             <Home size={16} />
-            <span>Class 11th Notes</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('class12')}
-            className="px-6 py-3 bg-white dark:bg-[#18110d] border border-orange-200 dark:border-orange-900/50 hover:border-orange-400 text-slate-800 dark:text-stone-200 rounded-2xl text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer shadow-sm"
-          >
-            <BookOpen size={16} className="text-orange-500" />
-            <span>Class 12th Notes</span>
+            <span>Class 12th Commerce Notes</span>
           </button>
         </div>
 

@@ -54,7 +54,7 @@ import NotFound from './components/NotFound';
 export default function App() {
   
   // App States
-  const [activeTab, setActiveTab] = useState<string>('class11');
+  const [activeTab, setActiveTab] = useState<string>('class12');
   const [activeDashboardTab, setActiveDashboardTab] = useState<string>('overview');
   const [darkMode, setDarkMode] = useState<boolean>(true);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
@@ -127,78 +127,6 @@ export default function App() {
   ];
 
   const fallbackNotes: Note[] = [
-    // --- CLASS 11TH COMMERCE NOTES ---
-    {
-      id: 'note_11_accounts_journal',
-      title: 'Class 11 Accountancy: Journal, Ledger & BRS Master Notes',
-      description: 'Handwritten accounting principles, rules of debit & credit, journal entry examples, ledger posting, trial balance & Bank Reconciliation Statement (BRS) step-by-step shortcuts.',
-      price: 149,
-      category: 'Accountancy',
-      subject: 'Accountancy',
-      grade: 'Class 11',
-      pdfUrl: 'class_11_journal_ledger_brs.pdf',
-      pagesCount: 18,
-      rating: 4.9,
-      downloadsCount: 380,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'note_11_accounts_financial',
-      title: 'Class 11 Accountancy: Financial Statements & Depreciation',
-      description: 'Trading Account, Profit & Loss Account, Balance Sheet with adjustments (closing stock, bad debts, provisions) & Straight Line / WDV depreciation numericals.',
-      price: 159,
-      category: 'Accountancy',
-      subject: 'Accountancy',
-      grade: 'Class 11',
-      pdfUrl: 'class_11_financial_statements.pdf',
-      pagesCount: 22,
-      rating: 4.9,
-      downloadsCount: 310,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'note_11_eco_micro',
-      title: 'Class 11 Economics: Microeconomics Curves & Formulas',
-      description: 'Consumer equilibrium IC curves, Price elasticity of demand formulas, Production function, Cost & Revenue curves, Market structures quick revision sheet.',
-      price: 139,
-      category: 'Economics',
-      subject: 'Economics',
-      grade: 'Class 11',
-      pdfUrl: 'class_11_microeconomics_guide.pdf',
-      pagesCount: 16,
-      rating: 4.8,
-      downloadsCount: 295,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'note_11_eco_stats',
-      title: 'Class 11 Economics: Statistics for Economics & Index Numbers',
-      description: 'Measures of central tendency (Mean, Median, Mode formulas), Dispersion, Correlation (Karl Pearson & Spearman) & Index Numbers solved numerical notes.',
-      price: 129,
-      category: 'Economics',
-      subject: 'Economics',
-      grade: 'Class 11',
-      pdfUrl: 'class_11_statistics_formulas.pdf',
-      pagesCount: 14,
-      rating: 4.8,
-      downloadsCount: 240,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'note_11_bst_org',
-      title: 'Class 11 Business Studies: Forms of Business & E-Commerce',
-      description: 'Sole Proprietorship, Partnership Deed, Joint Hindu Family, Joint Stock Company formation, E-Business & Social Responsibility revision mindmaps.',
-      price: 129,
-      category: 'Business Studies',
-      subject: 'Business Studies',
-      grade: 'Class 11',
-      pdfUrl: 'class_11_bst_forms_of_business.pdf',
-      pagesCount: 15,
-      rating: 4.7,
-      downloadsCount: 260,
-      createdAt: new Date().toISOString()
-    },
-
     // --- CLASS 12TH COMMERCE NOTES ---
     {
       id: 'note_12_accounts_partnership',
@@ -654,23 +582,8 @@ export default function App() {
       {/* 2. Main Tab View Dispatcher */}
       <main className="flex-1 pb-16">
         
-        {/* Class 11th Notes Page View */}
-        {(activeTab === 'class11' || activeTab === 'notes' || activeTab === 'notes-store') && (
-          <NotesStore
-            notesList={notesList}
-            cart={cart}
-            setCart={setCart}
-            isCartOpen={isCartOpen}
-            setIsCartOpen={setIsCartOpen}
-            onCheckoutComplete={handleCheckoutComplete}
-            user={user}
-            onLoginClick={() => setLoginModalOpen(true)}
-            gradeFilter="Class 11"
-          />
-        )}
-
-        {/* Class 12th Notes Page View */}
-        {activeTab === 'class12' && (
+        {/* Class 12th Commerce Notes Page View */}
+        {(activeTab === 'class12' || activeTab === 'class11' || activeTab === 'notes' || activeTab === 'notes-store') && (
           <NotesStore
             notesList={notesList}
             cart={cart}
