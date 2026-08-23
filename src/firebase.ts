@@ -28,11 +28,12 @@ import {
 const firebaseConfig = {
   apiKey: "AIzaSyBDoR5C2tJDKgD2bj6vgrLJtFh_4L6GQDo",
   authDomain: "choching-clases.firebaseapp.com",
+  databaseURL: "https://choching-clases-default-rtdb.firebaseio.com",
   projectId: "choching-clases",
   storageBucket: "choching-clases.firebasestorage.app",
   messagingSenderId: "318353922657",
-  appId: "1:318353922657:web:80f359b31b9d1c8f832820",
-  measurementId: "G-17NYLY5394"
+  appId: "1:318353922657:web:ce52611447e8c53d832820",
+  measurementId: "G-M66LECCG9M"
 };
 
 const app = initializeApp(firebaseConfig);
