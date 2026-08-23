@@ -121,13 +121,22 @@ export async function safeGetDocs<T>(collectionName: string, fallbackList: T[], 
     const colRef = collection(db, collectionName);
     const q = queryConstraints ? query(colRef, ...queryConstraints) : colRef;
     const querySnapshot = await getDocs(q);
-    if (querySnapshot.empty) {
-      return fallbackList;
+    
+    // Always include fallbacks to preserve template data across live deployments
+    const results: T[] = [...fallbackList];
+    
+    if (!querySnapshot.empty) {
+      querySnapshot.forEach((doc) => {
+        const data = { id: doc.id, ...doc.data() } as T;
+        // Check if item already exists in fallback (by id)
+        const existsIndex = results.findIndex(item => (item as any).id === doc.id);
+        if (existsIndex >= 0) {
+          results[existsIndex] = data; // Override fallback with DB version
+        } else {
+          results.unshift(data); // Add new DB items at the top
+        }
+      });
     }
-    const results: T[] = [];
-    querySnapshot.forEach((doc) => {
-      results.push({ id: doc.id, ...doc.data() } as T);
-    });
     return results;
   } catch (error) {
     console.warn(`Firestore list failed for ${collectionName}, returning fallback list:`, error);

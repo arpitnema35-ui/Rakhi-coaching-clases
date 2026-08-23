@@ -232,19 +232,19 @@ export default function NotesStore({
 
   const filteredNotes = notesList.filter(note => {
     if (gradeFilter) {
-      const g = note.grade.toLowerCase();
+      const g = (note.grade || '').toLowerCase();
       const targetG = gradeFilter.toLowerCase(); // e.g. "class 11" or "class 12"
       if (!g.includes(targetG) && !g.includes(targetG.replace('class ', '11')) && !g.includes(targetG.replace('class ', '12'))) {
         return false;
       }
     }
 
-    const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          note.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          note.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (note.title || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          (note.subject || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (note.description || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || 
-                            note.category.toLowerCase().includes(selectedCategory.toLowerCase()) ||
-                            note.subject.toLowerCase().includes(selectedCategory.toLowerCase());
+                            (note.category || '').toLowerCase().includes(selectedCategory.toLowerCase()) ||
+                            (note.subject || '').toLowerCase().includes(selectedCategory.toLowerCase());
     return matchesSearch && matchesCategory;
   });
 
