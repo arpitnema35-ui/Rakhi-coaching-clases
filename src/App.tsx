@@ -197,6 +197,48 @@ export default function App() {
       rating: 4.9,
       downloadsCount: 490,
       createdAt: new Date().toISOString()
+    },
+    {
+      id: 'note_12_maths_calculus',
+      title: 'Class 12 Applied/Core Mathematics: Calculus & Matrices',
+      description: 'Formula Cheat Sheets: Matrices & Determinants, Calculus (Differentiation & Integration), Financial Math, Linear Programming. Step-by-Step Solved PYQ PDFs.',
+      price: 149,
+      category: 'Mathematics',
+      subject: 'Mathematics',
+      grade: 'Class 12',
+      pdfUrl: 'class_12_maths_formula_sheet.pdf',
+      pagesCount: 20,
+      rating: 4.9,
+      downloadsCount: 310,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'note_12_english_writing',
+      title: 'Class 12 English Core: Writing Section Formats & Literature Summaries',
+      description: 'Notice, Formal/Informal Letter, Article, Report Writing formats. Flamingo & Vistas Chapter Summaries, character sketches & key quotes.',
+      price: 99,
+      category: 'English',
+      subject: 'English',
+      grade: 'Class 12',
+      pdfUrl: 'class_12_english_formats.pdf',
+      pagesCount: 15,
+      rating: 4.7,
+      downloadsCount: 650,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'note_12_cs_python',
+      title: 'Class 12 Computer Science: Python & SQL Cheat Sheets',
+      description: 'Python Syntax, Data structures (Lists, Tuples, Dictionaries), File Handling. SQL Queries, Table creation, Joins, Group By cheatsheet & sample Viva Q&A.',
+      price: 129,
+      category: 'Computer Science',
+      subject: 'Computer Science',
+      grade: 'Class 12',
+      pdfUrl: 'class_12_cs_python_sql.pdf',
+      pagesCount: 18,
+      rating: 4.8,
+      downloadsCount: 280,
+      createdAt: new Date().toISOString()
     }
   ];
 

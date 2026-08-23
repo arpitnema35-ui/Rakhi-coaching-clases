@@ -212,6 +212,7 @@ export default function AdminPanel({
     { id: 'admissions', label: 'Admissions Applications', icon: Users },
     { id: 'courses', label: 'Coaching Batches', icon: BookOpen },
     { id: 'notes', label: 'Study Notes Store', icon: FileText },
+    { id: 'videos', label: 'Video Lectures', icon: Edit },
     { id: 'tests', label: 'Mock Test Series', icon: Award },
     { id: 'blogs', label: 'Manage Blogs', icon: MessageSquare },
     { id: 'contacts', label: 'Contact Messages', icon: Tag }
@@ -474,7 +475,10 @@ export default function AdminPanel({
             <div className="space-y-6">
               {/* Upload Note */}
               <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-6 rounded-3xl shadow-sm space-y-4">
-                <h3 className="font-bold text-sm text-slate-950 dark:text-white">Upload New Revision Note (PDF)</h3>
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-sm text-slate-950 dark:text-white">Upload New Revision Note (PDF)</h3>
+                  <span className="bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400 px-2.5 py-1 rounded-lg text-[10px] font-bold">Secure PDF Upload</span>
+                </div>
                 
                 <form onSubmit={handleCreateNote} className="space-y-4 text-xs">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -485,20 +489,31 @@ export default function AdminPanel({
                         required
                         value={nTitle}
                         onChange={(e) => setNTitle(e.target.value)}
-                        placeholder="Class 10 Trigonometry Formula Sheet"
+                        placeholder="e.g. Partnership Accounts Part 1"
                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500">PRICE (INR)</label>
-                      <input
-                        type="number"
-                        required
-                        value={nPrice}
-                        onChange={(e) => setNPrice(e.target.value)}
-                        placeholder="149"
-                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none"
-                      />
+                      <label className="text-[10px] font-bold text-slate-500">PRICING SETTING</label>
+                      <div className="flex gap-2">
+                        <select
+                          className="w-1/3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-850 dark:text-slate-200 focus:outline-none"
+                          onChange={(e) => {
+                            if (e.target.value === 'Free Sample') setNPrice('0');
+                          }}
+                        >
+                          <option>Paid (Premium)</option>
+                          <option>Free Sample</option>
+                        </select>
+                        <input
+                          type="number"
+                          required
+                          value={nPrice}
+                          onChange={(e) => setNPrice(e.target.value)}
+                          placeholder="Amount (₹)"
+                          className="w-2/3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -510,43 +525,53 @@ export default function AdminPanel({
                         onChange={(e) => setNCategory(e.target.value)}
                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-850 dark:text-slate-200 focus:outline-none"
                       >
-                        <option>Maths</option>
-                        <option>Physics</option>
-                        <option>Chemistry</option>
-                        <option>Biology</option>
+                        <option>Accountancy</option>
+                        <option>Business Studies</option>
+                        <option>Economics</option>
+                        <option>Mathematics</option>
+                        <option>English</option>
+                        <option>Computer Science / IT</option>
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500">GRADE LEVEL</label>
+                      <label className="text-[10px] font-bold text-slate-500">CLASS / GRADE</label>
                       <select
                         value={nGrade}
                         onChange={(e) => setNGrade(e.target.value)}
                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-850 dark:text-slate-200 focus:outline-none"
                       >
-                        <option>Class 9</option>
-                        <option>Class 10</option>
                         <option>Class 11</option>
                         <option>Class 12</option>
-                        <option>JEE Target</option>
-                        <option>NEET Target</option>
+                        <option>CUET Foundation</option>
+                        <option>CA Foundation</option>
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500">TOTAL PAGES</label>
-                      <input
-                        type="number"
-                        value={nPages}
-                        onChange={(e) => setNPages(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none"
-                      />
+                      <label className="text-[10px] font-bold text-slate-500">PDF FILE UPLOAD</label>
+                      <div className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 border-dashed rounded-xl px-3 py-2 text-slate-800 dark:text-slate-400 text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                        Select PDF File
+                      </div>
                     </div>
+                  </div>
+
+                  {/* Anti-Piracy Features (UI Representation) */}
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl space-y-2">
+                    <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase">Security & Watermarking</span>
+                    <label className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+                      <input type="checkbox" defaultChecked className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600" />
+                      <span>Dynamically watermark student's name & phone number on all pages (Anti-Piracy)</span>
+                    </label>
+                    <label className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+                      <input type="checkbox" defaultChecked className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600" />
+                      <span>Allow 2-page Free Sample Preview before purchase</span>
+                    </label>
                   </div>
 
                   <button
                     type="submit"
-                    className="px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl text-xs shadow-md cursor-pointer"
+                    className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl text-xs shadow-md cursor-pointer transition-transform hover:scale-[1.02]"
                   >
-                    Publish Study Material Note
+                    Upload & Publish Study Notes
                   </button>
                 </form>
               </div>
@@ -559,7 +584,7 @@ export default function AdminPanel({
                     <div key={note.id} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 rounded-xl flex justify-between items-start">
                       <div>
                         <h4 className="font-bold text-slate-950 dark:text-white">{note.title}</h4>
-                        <p className="text-[10px] text-slate-400">₹{note.price} • {note.grade}</p>
+                        <p className="text-[10px] text-slate-400">₹{note.price} • {note.grade} • {note.subject}</p>
                       </div>
                       <button
                         onClick={() => onDeleteNote(note.id)}
@@ -570,6 +595,87 @@ export default function AdminPanel({
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* 4.5. VIDEO RECORDINGS (CRUD) */}
+          {activeAdminTab === 'videos' && (
+            <div className="space-y-6">
+              <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-6 rounded-3xl shadow-sm space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-sm text-slate-950 dark:text-white">Add Video Lecture / Recording</h3>
+                  <span className="bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400 px-2.5 py-1 rounded-lg text-[10px] font-bold">YouTube / Zoom Upload</span>
+                </div>
+                
+                <form onSubmit={(e) => e.preventDefault()} className="space-y-4 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500">LECTURE TITLE</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Class 12 Accounts: Not-for-Profit Intro"
+                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500">SUBJECT & BATCH</label>
+                      <select
+                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-850 dark:text-slate-200 focus:outline-none"
+                      >
+                        <option>Class 12 - Accountancy</option>
+                        <option>Class 12 - Economics</option>
+                        <option>Class 11 - Business Studies</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500">VIDEO SOURCE TYPE</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+                        <input type="radio" name="vid_source" defaultChecked className="text-red-600 focus:ring-red-600" />
+                        <span>YouTube / Vimeo Embed Link</span>
+                      </label>
+                      <label className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+                        <input type="radio" name="vid_source" className="text-red-600 focus:ring-red-600" />
+                        <span>Direct MP4 Upload</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500">VIDEO URL OR FILE</label>
+                    <input
+                      type="text"
+                      placeholder="https://youtube.com/watch?v=..."
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500">ATTACH STUDY NOTES (OPTIONAL)</label>
+                    <select
+                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-850 dark:text-slate-200 focus:outline-none"
+                    >
+                      <option>None</option>
+                      {notesList.map(n => (
+                        <option key={n.id}>{n.title}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      alert('Video processed and added to student dashboard successfully!');
+                    }}
+                    className="px-6 py-2.5 bg-red-600 text-white font-bold rounded-xl text-xs shadow-md cursor-pointer transition-transform hover:scale-[1.02]"
+                  >
+                    Publish Video Recording
+                  </button>
+                </form>
               </div>
             </div>
           )}

@@ -314,6 +314,9 @@ export default function NotesStore({
             { id: 'accountancy', label: 'Accountancy' },
             { id: 'economics', label: 'Economics' },
             { id: 'business', label: 'Business Studies' },
+            { id: 'mathematics', label: 'Mathematics' },
+            { id: 'english', label: 'English Core' },
+            { id: 'computer', label: 'Computer Science' },
           ].map((cat) => (
             <button
               key={cat.id}
