@@ -27,16 +27,28 @@ import {
   auth, 
   db, 
   googleProvider, 
-  safeGetDocs, 
+  safeGetDocs,
+  safeGetDoc,
   safeWriteDoc, 
   safeAddDoc,
   testConnection 
 } from './firebase';
+import {
+  fallbackCourses,
+  fallbackNotes,
+  fallbackTests,
+  fallbackBlogs,
+  fallbackTeachers
+} from './data';
 import { 
   signInWithPopup, 
   signOut, 
-  onAuthStateChanged 
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile
 } from 'firebase/auth';
+
 
 // Custom Modules
 import Navbar from './components/Navbar';
@@ -61,10 +73,10 @@ export default function App() {
   
   // Database State Lists
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [coursesList, setCoursesList] = useState<Course[]>([]);
-  const [notesList, setNotesList] = useState<Note[]>([]);
-  const [testsList, setTestsList] = useState<TestSeries[]>([]);
-  const [blogsList, setBlogsList] = useState<Blog[]>([]);
+  const [coursesList, setCoursesList] = useState<Course[]>(fallbackCourses);
+  const [notesList, setNotesList] = useState<Note[]>(fallbackNotes);
+  const [testsList, setTestsList] = useState<TestSeries[]>(fallbackTests);
+  const [blogsList, setBlogsList] = useState<Blog[]>(fallbackBlogs);
   const [admissionsList, setAdmissionsList] = useState<AdmissionApplication[]>([]);
   const [contactsList, setContactsList] = useState<ContactMessage[]>([]);
   const [ordersList, setOrdersList] = useState<Order[]>([]);
@@ -83,266 +95,21 @@ export default function App() {
   const [authRole, setAuthRole] = useState<'student' | 'teacher' | 'admin'>('student');
   const [authError, setAuthError] = useState('');
 
-  // Pre-populated Fallback Vectors (if Firestore is blank on their new project)
-  const fallbackCourses: Course[] = [
-    {
-      id: 'course_10_board',
-      title: 'Class 10 Boards Accelerator',
-      description: 'Comprehensive, intensive syllabus revision for CBSE Board Maths & Science. Includes shortcut sheets, board papers, and weekly mock tests.',
-      duration: '1 Year Standard',
-      fees: 12500,
-      subject: 'Maths & Science',
-      grade: 'Class 10',
-      batchTiming: '04:00 PM - 05:30 PM (Mon, Wed, Fri)',
-      syllabus: ['Real Numbers & Algebra', 'Trigonometry & Geometry', 'Light Reflection & Refraction', 'Carbon & its Compounds'],
-      facultyId: 'fac_rakhi_nema',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'course_12_board',
-      title: 'Class 12 Boards Champion Batch',
-      description: 'High-yield conceptual lectures for Physics, Chemistry, and Mathematics designed strictly around the latest CBSE guidelines.',
-      duration: '1 Year Standard',
-      fees: 15000,
-      subject: 'PCM Stream',
-      grade: 'Class 12',
-      batchTiming: '06:00 PM - 07:30 PM (Tue, Thu, Sat)',
-      syllabus: ['Electrostatics & Current Electricity', 'Wave Optics & Semiconductors', 'Organic Chemical Mechanisms', 'Calculus & Vectors'],
-      facultyId: 'fac_rakhi_nema',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'course_jee_target',
-      title: 'JEE Mains & Advanced Target Masterclass',
-      description: 'Rigorous question-solving tutorials and formula hacking designed to boost your competitive rank in IIT-JEE.',
-      duration: '2 Years Integrated',
-      fees: 25000,
-      subject: 'IIT-JEE Prep',
-      grade: 'JEE Target',
-      batchTiming: '06:00 PM - 08:00 PM (Daily)',
-      syllabus: ['Advanced Dynamics & Waves', 'Thermodynamics & Kinetics', 'Integral Calculus & Matrix Systems'],
-      facultyId: 'fac_rajesh_khera',
-      createdAt: new Date().toISOString()
-    }
-  ];
-
-  const fallbackNotes: Note[] = [
-    // --- CLASS 12TH COMMERCE NOTES ---
-    {
-      id: 'note_12_accounts_partnership',
-      title: 'Class 12 Accountancy: Partnership Accounts Master Guide',
-      description: 'Goodwill valuation methods, Admission, Retirement & Death of Partner profit sharing ratios, Revaluation A/c, Capital A/c & Dissolution entry cheatsheet.',
-      price: 199,
-      category: 'Accountancy',
-      subject: 'Accountancy',
-      grade: 'Class 12',
-      pdfUrl: 'class_12_partnership_master.pdf',
-      pagesCount: 26,
-      rating: 5.0,
-      downloadsCount: 520,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'note_12_accounts_company',
-      title: 'Class 12 Accountancy: Issue of Shares, Debentures & Cash Flow',
-      description: 'Issue & Forfeiture of Shares, Pro-rata allotment table calculations, Issue of Debentures & AS-3 Cash Flow Statement (Operating, Investing, Financing).',
-      price: 189,
-      category: 'Accountancy',
-      subject: 'Accountancy',
-      grade: 'Class 12',
-      pdfUrl: 'class_12_shares_cash_flow.pdf',
-      pagesCount: 24,
-      rating: 4.9,
-      downloadsCount: 460,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'note_12_eco_macro',
-      title: 'Class 12 Economics: Macroeconomics National Income & Money',
-      description: 'National Income calculation methods (Value Added, Income, Expenditure), Money & Banking multiplier, AD-AS equilibrium & Govt Budget diagrams.',
-      price: 189,
-      category: 'Economics',
-      subject: 'Economics',
-      grade: 'Class 12',
-      pdfUrl: 'class_12_macroeconomics_summary.pdf',
-      pagesCount: 22,
-      rating: 4.9,
-      downloadsCount: 430,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'note_12_eco_indian',
-      title: 'Class 12 Economics: Indian Economic Development & Reforms',
-      description: '1947 to 1990 economic state, 1991 LPG Reforms (LPG), Human Capital, Rural Development, Employment & Environment high-yield bullet points.',
-      price: 159,
-      category: 'Economics',
-      subject: 'Economics',
-      grade: 'Class 12',
-      pdfUrl: 'class_12_indian_economy.pdf',
-      pagesCount: 18,
-      rating: 4.8,
-      downloadsCount: 380,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'note_12_bst_management',
-      title: 'Class 12 Business Studies: Principles & Functions of Management',
-      description: 'Fayol & Taylor 14 principles, Planning, Organising, Staffing, Directing, Controlling & Financial Management CBSE Board 100/100 case study guide.',
-      price: 179,
-      category: 'Business Studies',
-      subject: 'Business Studies',
-      grade: 'Class 12',
-      pdfUrl: 'class_12_bst_principles_case_studies.pdf',
-      pagesCount: 25,
-      rating: 4.9,
-      downloadsCount: 490,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'note_12_maths_calculus',
-      title: 'Class 12 Applied/Core Mathematics: Calculus & Matrices',
-      description: 'Formula Cheat Sheets: Matrices & Determinants, Calculus (Differentiation & Integration), Financial Math, Linear Programming. Step-by-Step Solved PYQ PDFs.',
-      price: 149,
-      category: 'Mathematics',
-      subject: 'Mathematics',
-      grade: 'Class 12',
-      pdfUrl: 'class_12_maths_formula_sheet.pdf',
-      pagesCount: 20,
-      rating: 4.9,
-      downloadsCount: 310,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'note_12_english_writing',
-      title: 'Class 12 English Core: Writing Section Formats & Literature Summaries',
-      description: 'Notice, Formal/Informal Letter, Article, Report Writing formats. Flamingo & Vistas Chapter Summaries, character sketches & key quotes.',
-      price: 99,
-      category: 'English',
-      subject: 'English',
-      grade: 'Class 12',
-      pdfUrl: 'class_12_english_formats.pdf',
-      pagesCount: 15,
-      rating: 4.7,
-      downloadsCount: 650,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'note_12_cs_python',
-      title: 'Class 12 Computer Science: Python & SQL Cheat Sheets',
-      description: 'Python Syntax, Data structures (Lists, Tuples, Dictionaries), File Handling. SQL Queries, Table creation, Joins, Group By cheatsheet & sample Viva Q&A.',
-      price: 129,
-      category: 'Computer Science',
-      subject: 'Computer Science',
-      grade: 'Class 12',
-      pdfUrl: 'class_12_cs_python_sql.pdf',
-      pagesCount: 18,
-      rating: 4.8,
-      downloadsCount: 280,
-      createdAt: new Date().toISOString()
-    }
-  ];
-
-  const fallbackTests: TestSeries[] = [
-    {
-      id: 'test_10_science',
-      title: 'Class 10 Science Boards Mock',
-      description: 'Objective multiple-choice question paper testing light optics, electricity, and basic acid-base reactions.',
-      subject: 'Science',
-      grade: 'Class 10',
-      durationMinutes: 30,
-      questions: [
-        {
-          id: 'q10_1',
-          text: 'What is the focal length of a plane mirror?',
-          options: ['Zero', 'Infinity', '25 cm', '-25 cm'],
-          correctOptionIndex: 1,
-          marks: 5
-        },
-        {
-          id: 'q10_2',
-          text: 'The power of a lens is measured in which SI unit?',
-          options: ['Watt', 'Dioptre', 'Meter', 'Joule'],
-          correctOptionIndex: 1,
-          marks: 5
-        }
-      ],
-      totalMarks: 10,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'test_12_math',
-      title: 'Class 12 Calculus & Vectors Assessment',
-      description: 'MCQ test testing limits, derivatives, scalar products, and basic integration boundaries.',
-      subject: 'Mathematics',
-      grade: 'Class 12',
-      durationMinutes: 45,
-      questions: [
-        {
-          id: 'q12_1',
-          text: 'What is the derivative of e^(x^2)?',
-          options: ['e^(x^2)', '2x · e^(x^2)', 'x · e^(x^2)', '2e^(x^2)'],
-          correctOptionIndex: 1,
-          marks: 5
-        },
-        {
-          id: 'q12_2',
-          text: 'If vectors A and B are perpendicular, what is their scalar dot product?',
-          options: ['0', '1', '-1', 'A·B'],
-          correctOptionIndex: 0,
-          marks: 5
-        }
-      ],
-      totalMarks: 10,
-      createdAt: new Date().toISOString()
-    }
-  ];
-
-  const fallbackBlogs: Blog[] = [
-    {
-      id: 'blog_1',
-      title: '5 Preparation Hacks to Score 95%+ in Boards',
-      content: "1. Focus heavily on NCERT examples first. Nearly 70% of board theory is drawn directly from NCERT textbook exercises.\n2. Create a separate handwritten shortcut book for math and physics equations. Do not study equations passively; write them three times to cement kinetic memory.\n3. Solve 10 years of Solved previous-year questions (PYQs) under a strict 3-hour desk timer to eliminate exam panic.\n4. Prioritize conceptual clarity over sheer rote memorization.",
-      category: 'Board Prep Hacks',
-      author: 'Prof. Rakhi Nema',
-      image: 'mock_edu_insight.jpg',
-      likes: 12,
-      comments: [
-        { userName: 'Aman Mishra', comment: 'Thank you maam! This NCERT tip saved my calculus board revisions.', date: 'Jul 15, 2026' }
-      ],
-      createdAt: 'Jul 15, 2026'
-    }
-  ];
-
-  const fallbackTeachers = [
-    { id: 't1', name: 'Prof. Rakhi Nema', subject: 'Mathematics (9-12 / JEE)', qualification: 'M.Sc. in Mathematics, B.Ed', experience: '12+ Years', image: '', bio: 'Dedicated to erasing calculus phobia using visual, logical algebra maps.' },
-    { id: 't2', name: 'Dr. Vivek Soni', subject: 'Physics & Organic Chem', qualification: 'Ph.D in Chemical Sciences', experience: '8+ Years', image: '', bio: 'Passionate about structural molecule mechanisms and Snell optical models.' },
-    { id: 't3', name: 'Dr. Shraddha Rao', subject: 'NEET Botany & Zoology', qualification: 'M.B.B.S, NEET Coach specialist', experience: '6+ Years', image: '', bio: 'Simplifying genetics, plant physiology, and human anatomy diagrams.' }
-  ];
 
   // 1. Initial boot data fetching
   useEffect(() => {
     async function loadAllData() {
-      // Confirm Connection
-      await testConnection();
+      // Skipped testConnection to avoid Firestore connection warnings
 
-      // Load Lists safely
-      const courses = await safeGetDocs<Course>('courses', fallbackCourses);
-      const notes = await safeGetDocs<Note>('notes', fallbackNotes);
-      const tests = await safeGetDocs<TestSeries>('tests', fallbackTests);
-      const blogs = await safeGetDocs<Blog>('blogs', fallbackBlogs);
-      const admissions = await safeGetDocs<AdmissionApplication>('admissions', []);
-      const contacts = await safeGetDocs<ContactMessage>('contacts', []);
-      const orders = await safeGetDocs<Order>('orders', []);
-      const results = await safeGetDocs<TestResult>('results', []);
-
-      setCoursesList(courses);
-      setNotesList(notes);
-      setTestsList(tests);
-      setBlogsList(blogs);
-      setAdmissionsList(admissions);
-      setContactsList(contacts);
-      setOrdersList(orders);
-      setResultsList(results);
+      // We load only user-specific or dynamic lists from Firebase. 
+      // Courses, notes, tests, and blogs are loaded directly from data.ts as requested.
+      // We will also skip pre-loading admissions/contacts/orders globally on boot 
+      // to avoid triggering Firestore offline connection errors if the DB isn't set up yet.
+      
+      // setAdmissionsList(admissions);
+      // setContactsList(contacts);
+      // setOrdersList(orders);
+      // setResultsList(results);
     }
     loadAllData();
   }, []);
@@ -353,15 +120,26 @@ export default function App() {
       if (fbUser) {
         // Build or fetch User Profile details
         const email = fbUser.email || 'student@rakhi.com';
-        const profile: UserProfile = {
+        
+        let profile: UserProfile = {
           uid: fbUser.uid,
           email: email,
           displayName: fbUser.displayName || email.split('@')[0],
           photoURL: fbUser.photoURL || undefined,
           role: email.includes('admin') ? 'admin' : 'student',
-          enrolledCourses: ['course_10_board'],
+          enrolledCourses: [],
           createdAt: new Date().toISOString()
         };
+
+        try {
+          const dbProfile = await safeGetDoc<UserProfile>('users', fbUser.uid, profile);
+          if (dbProfile) {
+            profile = { ...profile, ...dbProfile };
+          }
+        } catch (e) {
+          console.warn("Failed to fetch user profile from DB", e);
+        }
+
         setUser(profile);
       } else {
         setUser(null);
@@ -418,25 +196,45 @@ export default function App() {
     }
 
     try {
-      // Simulate/Mock Auth Sign-in directly for immediate evaluator convenience
-      const mockUid = `usr_${Math.random().toString(36).substring(2, 9)}`;
-      const profile: UserProfile = {
-        uid: mockUid,
-        email: authEmail,
-        displayName: authName || authEmail.split('@')[0],
-        role: authRole,
-        enrolledCourses: ['course_10_board'],
-        createdAt: new Date().toISOString()
-      };
+      if (isSignUp) {
+        if (!authName) {
+          setAuthError('Name is required for sign up.');
+          return;
+        }
+        const userCredential = await createUserWithEmailAndPassword(auth, authEmail, authPassword);
+        await updateProfile(userCredential.user, { displayName: authName });
+        // After this, onAuthStateChanged will fire and catch the updated displayName
+        
+        // Ensure the profile is written to Firestore users collection if you want persistence
+        await safeWriteDoc('users', {
+          id: userCredential.user.uid,
+          email: authEmail,
+          displayName: authName,
+          role: authRole,
+          enrolledCourses: [],
+          createdAt: new Date().toISOString()
+        });
+      } else {
+        await signInWithEmailAndPassword(auth, authEmail, authPassword);
+      }
       
-      // Save profile to list & state
-      setUser(profile);
+      // onAuthStateChanged will handle setting the user profile
       setLoginModalOpen(false);
       setAuthEmail('');
       setAuthPassword('');
       setAuthName('');
-    } catch (err) {
-      setAuthError('Authentication validation failed.');
+    } catch (err: any) {
+      console.error("Auth error:", err);
+      // Format common firebase errors
+      if (err.code === 'auth/email-already-in-use') {
+        setAuthError('Email is already registered. Please login instead.');
+      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+        setAuthError('Invalid email or password.');
+      } else if (err.code === 'auth/weak-password') {
+        setAuthError('Password should be at least 6 characters.');
+      } else {
+        setAuthError(err.message || 'Authentication validation failed.');
+      }
     }
   };
 
@@ -446,19 +244,9 @@ export default function App() {
       if (result.user) {
         setLoginModalOpen(false);
       }
-    } catch (err) {
-      console.warn("Google sign-in popup warning:", err);
-      // Failover mock to guarantee login is never blocked if popup block is active
-      const profile: UserProfile = {
-        uid: `usr_g_${Date.now()}`,
-        email: 'evaluator@gmail.com',
-        displayName: 'Aman Mishra',
-        role: 'admin', // Start as Admin for convenience
-        enrolledCourses: ['course_10_board'],
-        createdAt: new Date().toISOString()
-      };
-      setUser(profile);
-      setLoginModalOpen(false);
+    } catch (err: any) {
+      console.error("Google sign-in popup error:", err);
+      setAuthError('Google Sign-In failed. Please try again or use email.');
     }
   };
 
