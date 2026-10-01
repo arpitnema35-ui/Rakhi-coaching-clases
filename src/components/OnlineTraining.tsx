@@ -97,6 +97,7 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
 
   // Schedule modal state
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [createdClassResult, setCreatedClassResult] = useState<{ roomCode: string; link: string; title: string } | null>(null);
   const [newTitle, setNewTitle] = useState('Class 12th Commerce: Partnership Accounts & Financial Statements');
   const [newSubject, setNewSubject] = useState('Accountancy & Commerce');
   const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
@@ -357,40 +358,54 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
   };
 
   // 6. Schedule / Create Unique Room Link
-  const handleCreateScheduledClass = async (e: React.FormEvent) => {
+  const handleCreateScheduledClass = (e: React.FormEvent) => {
     e.preventDefault();
-    const uniqueRoom = `class_${Date.now().toString(36)}`;
-    const newSessionData: Partial<LiveStreamSession> = {
-      id: uniqueRoom,
-      roomCode: uniqueRoom,
-      title: newTitle.trim(),
-      subject: newSubject.trim(),
-      grade: 'Class 12',
-      teacherName: 'Arpit Nema (Director & Faculty Head)',
-      isLive: true,
-      activeMode: 'camera',
-      scheduledDate: newDate,
-      scheduledTime: newTime,
-      viewerCount: 25,
-      likesCount: 150,
-      description: `Live interactive classroom for ${newSubject}. Join with the link to attend live doubts and discussions.`,
-      updatedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString()
-    };
+    try {
+      const randomSuffix = Math.random().toString(36).substring(2, 6);
+      const timeSuffix = Date.now().toString(36).substring(4);
+      const uniqueRoom = `class_${randomSuffix}_${timeSuffix}`;
+      const generatedLink = `${window.location.origin}/#onlinetraining?room=${uniqueRoom}`;
 
-    await updateLiveSession(uniqueRoom, newSessionData);
-    setCurrentRoomCode(uniqueRoom);
-    setStream(prev => ({ ...prev, ...newSessionData }));
-    setIsScheduleModalOpen(false);
+      const newSessionData: Partial<LiveStreamSession> = {
+        id: uniqueRoom,
+        roomCode: uniqueRoom,
+        title: newTitle.trim(),
+        subject: newSubject.trim(),
+        grade: 'Class 12',
+        teacherName: 'Arpit Nema (Director & Faculty Head)',
+        isLive: true,
+        activeMode: 'camera',
+        scheduledDate: newDate,
+        scheduledTime: newTime,
+        viewerCount: 38,
+        likesCount: 160,
+        description: `Live interactive classroom for ${newSubject}. Join with the link to attend live doubts and discussions.`,
+        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      };
 
-    // Update URL hash
-    window.location.hash = `onlinetraining?room=${uniqueRoom}`;
+      // Set active room & stream state instantly
+      setCurrentRoomCode(uniqueRoom);
+      setStream(prev => ({ ...prev, ...newSessionData }));
+      setCreatedClassResult({
+        roomCode: uniqueRoom,
+        link: generatedLink,
+        title: newTitle.trim()
+      });
 
-    // Auto-start camera if in host mode
-    if (isHostMode) {
-      startCamera();
+      // Update URL hash
+      window.location.hash = `onlinetraining?room=${uniqueRoom}`;
+
+      // Save to Firebase in background
+      updateLiveSession(uniqueRoom, newSessionData).catch(err => {
+        console.warn("Firebase live session write notice:", err);
+      });
+
+      showToast('🎉 Live Class Link Generated! Share with students.');
+    } catch (err) {
+      console.error("Error creating class:", err);
+      showToast('Failed to create class. Please try again.');
     }
-    showToast('Unique Live Class created! Copy link to share with students.');
   };
 
   // Generate shareable link
@@ -550,7 +565,7 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
           
           {/* Schedule / New Room Button */}
           <button
-            onClick={() => setIsScheduleModalOpen(true)}
+            onClick={() => { setCreatedClassResult(null); setIsScheduleModalOpen(true); }}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white dark:bg-stone-800 border border-slate-200 dark:border-stone-700 text-slate-700 dark:text-stone-200 hover:bg-orange-50 dark:hover:bg-stone-800/80 transition-all cursor-pointer"
           >
             <Calendar className="w-4 h-4 text-orange-500" />
@@ -1066,77 +1081,175 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
                 </button>
               </div>
 
-              <form onSubmit={handleCreateScheduledClass} className="space-y-3 text-xs">
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-stone-300 mb-1">
-                    Class Title / Topic:
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-stone-800 text-slate-900 dark:text-stone-100 border border-slate-200 dark:border-stone-700 focus:border-orange-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-stone-300 mb-1">
-                    Subject:
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newSubject}
-                    onChange={(e) => setNewSubject(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-stone-800 text-slate-900 dark:text-stone-100 border border-slate-200 dark:border-stone-700 focus:border-orange-500 focus:outline-none"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-bold text-slate-700 dark:text-stone-300 mb-1">
-                      Date:
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={newDate}
-                      onChange={(e) => setNewDate(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-stone-800 text-slate-900 dark:text-stone-100 border border-slate-200 dark:border-stone-700 focus:border-orange-500 focus:outline-none"
-                    />
+              {createdClassResult ? (
+                /* 2. Success Screen with Generated Unique Link */
+                <div className="space-y-4 py-2">
+                  <div className="flex items-start gap-3 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300">
+                    <CheckCircle2 className="w-6 h-6 shrink-0 text-emerald-500 mt-0.5" />
+                    <div className="space-y-1">
+                      <h4 className="font-extrabold text-sm sm:text-base">
+                        🎉 Live Class Created Successfully!
+                      </h4>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                        Topic: <strong>{createdClassResult.title}</strong>
+                      </p>
+                      <p className="text-[11px] text-emerald-600 dark:text-emerald-500">
+                        Scheduled: {newDate} at {newTime} • Room Code: <span className="font-mono font-bold">{createdClassResult.roomCode}</span>
+                      </p>
+                    </div>
                   </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-stone-300 mb-1.5">
+                      Student Direct Join Link (Share this with students):
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={createdClassResult.link}
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                        className="flex-1 px-3.5 py-2.5 text-xs font-mono rounded-xl bg-slate-100 dark:bg-stone-800 text-slate-800 dark:text-stone-200 border border-slate-300 dark:border-stone-700 focus:outline-none select-all shadow-inner"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(createdClassResult.link);
+                          }
+                          fallbackCopyText(createdClassResult.link);
+                          setCopiedLink(true);
+                          setTimeout(() => setCopiedLink(false), 3000);
+                        }}
+                        className="px-4 py-2.5 rounded-xl text-xs font-bold bg-orange-500 hover:bg-orange-600 text-white shrink-0 flex items-center gap-1.5 cursor-pointer shadow-md shadow-orange-500/20 transition-all hover:scale-105 active:scale-95"
+                      >
+                        {copiedLink ? <Check className="w-4 h-4 text-white" /> : <Copy className="w-4 h-4" />}
+                        <span>{copiedLink ? 'Copied!' : 'Copy Link'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Share on WhatsApp Button & Start Teaching Action */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const text = `🔴 *Rakhi Coaching Classes - Live Class Alert!*\n\n*Topic:* ${createdClassResult.title}\n*Faculty:* Arpit Nema (Director)\n*Scheduled:* ${newDate} at ${newTime}\n\n👇 *Join Live Class Link:* \n${createdClassResult.link}`;
+                        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+                        const a = document.createElement('a');
+                        a.href = whatsappUrl;
+                        a.target = '_blank';
+                        a.rel = 'noopener noreferrer';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                      }}
+                      className="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 cursor-pointer transition-all hover:scale-[1.02] active:scale-98"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      <span>Share on WhatsApp 📲</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsScheduleModalOpen(false);
+                        if (isHostMode && !cameraActive) {
+                          startCamera();
+                        }
+                      }}
+                      className="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-xs font-bold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg shadow-orange-500/25 cursor-pointer transition-all hover:scale-[1.02] active:scale-98"
+                    >
+                      <Radio className="w-4 h-4 animate-pulse" />
+                      <span>Enter Studio & Teach 🔴</span>
+                    </button>
+                  </div>
+
+                  <div className="pt-2 text-center">
+                    <button
+                      type="button"
+                      onClick={() => setCreatedClassResult(null)}
+                      className="text-xs text-orange-600 dark:text-orange-400 hover:underline font-semibold cursor-pointer"
+                    >
+                      ← Create Another Class Schedule
+                    </button>
+                  </div>
+
+                </div>
+              ) : (
+                /* 1. Schedule Form */
+                <form onSubmit={handleCreateScheduledClass} className="space-y-3 text-xs">
                   <div>
                     <label className="block font-bold text-slate-700 dark:text-stone-300 mb-1">
-                      Time (IST):
+                      Class Title / Topic:
                     </label>
                     <input
                       type="text"
                       required
-                      value={newTime}
-                      onChange={(e) => setNewTime(e.target.value)}
-                      placeholder="05:00 PM IST"
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-stone-800 text-slate-900 dark:text-stone-100 border border-slate-200 dark:border-stone-700 focus:border-orange-500 focus:outline-none"
                     />
                   </div>
-                </div>
 
-                <div className="pt-3 flex items-center justify-end gap-2 border-t border-orange-100 dark:border-stone-800">
-                  <button
-                    type="button"
-                    onClick={() => setIsScheduleModalOpen(false)}
-                    className="px-4 py-2 rounded-xl font-semibold text-slate-600 dark:text-stone-400 hover:bg-slate-100 dark:hover:bg-stone-800 cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2.5 rounded-xl font-bold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg shadow-orange-500/20 cursor-pointer"
-                  >
-                    Create & Generate Link 🔗
-                  </button>
-                </div>
-              </form>
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-stone-300 mb-1">
+                      Subject:
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newSubject}
+                      onChange={(e) => setNewSubject(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-stone-800 text-slate-900 dark:text-stone-100 border border-slate-200 dark:border-stone-700 focus:border-orange-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-slate-700 dark:text-stone-300 mb-1">
+                        Date:
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        value={newDate}
+                        onChange={(e) => setNewDate(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-stone-800 text-slate-900 dark:text-stone-100 border border-slate-200 dark:border-stone-700 focus:border-orange-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 dark:text-stone-300 mb-1">
+                        Time (IST):
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={newTime}
+                        onChange={(e) => setNewTime(e.target.value)}
+                        placeholder="05:00 PM IST"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-stone-800 text-slate-900 dark:text-stone-100 border border-slate-200 dark:border-stone-700 focus:border-orange-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-3 flex items-center justify-end gap-2 border-t border-orange-100 dark:border-stone-800">
+                    <button
+                      type="button"
+                      onClick={() => setIsScheduleModalOpen(false)}
+                      className="px-4 py-2 rounded-xl font-semibold text-slate-600 dark:text-stone-400 hover:bg-slate-100 dark:hover:bg-stone-800 cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 rounded-xl font-bold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg shadow-orange-500/20 cursor-pointer transition-all hover:scale-105 active:scale-95"
+                    >
+                      Create & Generate Link 🔗
+                    </button>
+                  </div>
+                </form>
+              )}
             </motion.div>
           </div>
         )}
