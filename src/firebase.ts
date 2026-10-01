@@ -361,30 +361,117 @@ export async function sendLiveChatMessage(
   }
 }
 
+// Local Multi-Tab / Same Browser Sync Helper
+function getLocalParticipants(roomId: string): LiveParticipant[] {
+  try {
+    const raw = localStorage.getItem(`rakhi_participants_${roomId}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalParticipants(roomId: string, list: LiveParticipant[]): void {
+  try {
+    localStorage.setItem(`rakhi_participants_${roomId}`, JSON.stringify(list));
+    if (typeof BroadcastChannel !== 'undefined') {
+      const channel = new BroadcastChannel(`rakhi_live_participants_${roomId}`);
+      channel.postMessage({ type: 'PARTICIPANTS_UPDATE', list });
+      channel.close();
+    }
+  } catch (e) {
+    console.warn("Local participant cache notice:", e);
+  }
+}
+
 // 1. Subscribe to Participants in a Live Session Room (Waiting / Admitted / Kicked)
 export function subscribeToParticipants(
   roomId: string,
   callback: (participants: LiveParticipant[]) => void
 ): () => void {
+  let isMounted = true;
+  let cachedList: LiveParticipant[] = getLocalParticipants(roomId);
+
+  // Deliver cached/local immediately if available
+  if (cachedList.length > 0) {
+    callback(cachedList);
+  }
+
+  // Cross-tab broadcast listener for instant notification
+  let bc: BroadcastChannel | null = null;
+  if (typeof BroadcastChannel !== 'undefined') {
+    try {
+      bc = new BroadcastChannel(`rakhi_live_participants_${roomId}`);
+      bc.onmessage = (event) => {
+        if (event.data?.type === 'PARTICIPANTS_UPDATE' && Array.isArray(event.data.list)) {
+          cachedList = event.data.list;
+          if (isMounted) callback(cachedList);
+        }
+      };
+    } catch {}
+  }
+
+  // Storage event listener fallback
+  const handleStorage = (e: StorageEvent) => {
+    if (e.key === `rakhi_participants_${roomId}` && e.newValue) {
+      try {
+        cachedList = JSON.parse(e.newValue);
+        if (isMounted) callback(cachedList);
+      } catch {}
+    }
+  };
+  window.addEventListener('storage', handleStorage);
+
+  let unsubscribeFirestore: () => void = () => {};
+
   try {
     const colRef = collection(db, 'live_sessions', roomId, 'participants');
-    const q = query(colRef, orderBy('joinedAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const list: LiveParticipant[] = snapshot.docs.map(doc => ({
+    // Note: avoid orderBy to prevent index errors or missing-field drops
+    unsubscribeFirestore = onSnapshot(colRef, (snapshot) => {
+      if (!isMounted) return;
+      const remoteList: LiveParticipant[] = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as LiveParticipant));
-      callback(list);
+
+      // Sort by joinedAt descending in JavaScript safely
+      remoteList.sort((a, b) => {
+        const timeA = new Date(a.joinedAt || 0).getTime();
+        const timeB = new Date(b.joinedAt || 0).getTime();
+        return timeB - timeA;
+      });
+
+      // Merge remote with any un-synced local items
+      const mergedMap = new Map<string, LiveParticipant>();
+      cachedList.forEach(p => mergedMap.set(p.id, p));
+      remoteList.forEach(p => mergedMap.set(p.id, p));
+
+      const mergedList = Array.from(mergedMap.values()).sort((a, b) => {
+        const timeA = new Date(a.joinedAt || 0).getTime();
+        const timeB = new Date(b.joinedAt || 0).getTime();
+        return timeB - timeA;
+      });
+
+      cachedList = mergedList;
+      saveLocalParticipants(roomId, mergedList);
+      callback(mergedList);
     }, (error) => {
       console.warn("Firestore participants subscription notice:", error);
-      callback([]);
+      // Keep cached list, do NOT clear to [] on temporary network drops!
+      if (cachedList.length > 0 && isMounted) {
+        callback(cachedList);
+      }
     });
-    return unsubscribe;
   } catch (err) {
     console.warn("Failed to subscribe to participants:", err);
-    callback([]);
-    return () => {};
   }
+
+  return () => {
+    isMounted = false;
+    unsubscribeFirestore();
+    if (bc) bc.close();
+    window.removeEventListener('storage', handleStorage);
+  };
 }
 
 // 2. Student requests to join room (starts in 'waiting' status for host approval)
@@ -395,23 +482,35 @@ export async function requestJoinLiveRoom(
   extra?: { grade?: string; avatar?: string }
 ): Promise<string> {
   const pId = studentId || `student_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+  const participantData: LiveParticipant = {
+    id: pId,
+    name: studentName.trim() || 'Student',
+    role: 'student',
+    status: 'waiting',
+    joinedAt: new Date().toISOString(),
+    grade: extra?.grade || 'Class 12',
+    avatar: extra?.avatar
+  };
+
+  // 1. Immediately store and broadcast locally so Admin sees it in 0ms!
+  const localList = getLocalParticipants(roomId);
+  const existingIdx = localList.findIndex(p => p.id === pId);
+  if (existingIdx >= 0) {
+    localList[existingIdx] = participantData;
+  } else {
+    localList.unshift(participantData);
+  }
+  saveLocalParticipants(roomId, localList);
+
+  // 2. Write to Firestore in background
   try {
     const docRef = doc(db, 'live_sessions', roomId, 'participants', pId);
-    const participantData: LiveParticipant = {
-      id: pId,
-      name: studentName.trim() || 'Student',
-      role: 'student',
-      status: 'waiting',
-      joinedAt: new Date().toISOString(),
-      grade: extra?.grade || 'Class 12',
-      avatar: extra?.avatar
-    };
     await setDoc(docRef, participantData, { merge: true });
-    return pId;
   } catch (err) {
     console.warn("Firestore requestJoinLiveRoom notice:", err);
-    return pId;
   }
+
+  return pId;
 }
 
 // 3. Admin updates student status: 'admitted' (allow) | 'rejected' (disallow) | 'kicked' (kickout)
@@ -421,11 +520,34 @@ export async function updateParticipantStatus(
   status: 'waiting' | 'admitted' | 'rejected' | 'kicked',
   reason?: string
 ): Promise<void> {
+  const now = new Date().toISOString();
+
+  // 1. Update local cache & broadcast immediately
+  const localList = getLocalParticipants(roomId);
+  const target = localList.find(p => p.id === participantId);
+  if (target) {
+    target.status = status;
+    target.updatedAt = now;
+    if (reason) target.rejectionReason = reason;
+    saveLocalParticipants(roomId, localList);
+  }
+
+  // Also broadcast individual status change
+  try {
+    localStorage.setItem(`rakhi_student_status_${roomId}_${participantId}`, JSON.stringify({ status, reason, updatedAt: now }));
+    if (typeof BroadcastChannel !== 'undefined') {
+      const ch = new BroadcastChannel(`rakhi_student_status_${roomId}_${participantId}`);
+      ch.postMessage({ status, reason, updatedAt: now });
+      ch.close();
+    }
+  } catch {}
+
+  // 2. Update Firestore document
   try {
     const docRef = doc(db, 'live_sessions', roomId, 'participants', participantId);
     const updateData: Record<string, any> = { 
       status, 
-      updatedAt: new Date().toISOString() 
+      updatedAt: now 
     };
     if (reason) {
       updateData.rejectionReason = reason;
@@ -449,9 +571,45 @@ export function subscribeToMyParticipantStatus(
   participantId: string,
   callback: (status: 'waiting' | 'admitted' | 'rejected' | 'kicked') => void
 ): () => void {
+  let isMounted = true;
+
+  // Check local cache
+  try {
+    const raw = localStorage.getItem(`rakhi_student_status_${roomId}_${participantId}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.status) callback(parsed.status);
+    }
+  } catch {}
+
+  // Cross-tab broadcast channel
+  let bc: BroadcastChannel | null = null;
+  if (typeof BroadcastChannel !== 'undefined') {
+    try {
+      bc = new BroadcastChannel(`rakhi_student_status_${roomId}_${participantId}`);
+      bc.onmessage = (event) => {
+        if (event.data?.status && isMounted) {
+          callback(event.data.status);
+        }
+      };
+    } catch {}
+  }
+
+  const handleStorage = (e: StorageEvent) => {
+    if (e.key === `rakhi_student_status_${roomId}_${participantId}` && e.newValue) {
+      try {
+        const parsed = JSON.parse(e.newValue);
+        if (parsed.status && isMounted) callback(parsed.status);
+      } catch {}
+    }
+  };
+  window.addEventListener('storage', handleStorage);
+
+  let unsubscribeFirestore = () => {};
   try {
     const docRef = doc(db, 'live_sessions', roomId, 'participants', participantId);
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+    unsubscribeFirestore = onSnapshot(docRef, (docSnap) => {
+      if (!isMounted) return;
       if (docSnap.exists()) {
         const data = docSnap.data() as LiveParticipant;
         callback(data.status || 'waiting');
@@ -461,11 +619,16 @@ export function subscribeToMyParticipantStatus(
     }, (error) => {
       console.warn("Firestore participant status listener notice:", error);
     });
-    return unsubscribe;
   } catch (err) {
     console.warn("Failed to listen to participant status:", err);
-    return () => {};
   }
+
+  return () => {
+    isMounted = false;
+    unsubscribeFirestore();
+    if (bc) bc.close();
+    window.removeEventListener('storage', handleStorage);
+  };
 }
 
 // 5. Admin Security Verification & Database Storage

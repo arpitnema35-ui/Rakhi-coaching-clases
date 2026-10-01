@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   PenTool, 
   Eraser, 
@@ -49,7 +50,7 @@ export default function WhiteboardModule({
   const [activeTool, setActiveTool] = useState<'pen' | 'line' | 'eraser'>('pen');
   const [lineStartPos, setLineStartPos] = useState<{ x: number; y: number } | null>(null);
 
-  // Initialize canvas
+  // Initialize and resize canvas
   useEffect(() => {
     if (!isOpen) return;
     const canvas = canvasRef.current;
@@ -59,17 +60,20 @@ export default function WhiteboardModule({
 
     const resizeCanvas = () => {
       const container = containerRef.current;
-      if (!container) return;
-      const rect = container.getBoundingClientRect();
-      if (canvas.width !== rect.width || canvas.height !== rect.height) {
+      if (!container || !canvas) return;
+
+      const targetWidth = isFullscreen ? window.innerWidth : (container.clientWidth || 800);
+      const targetHeight = isFullscreen ? window.innerHeight : (container.clientHeight || 480);
+
+      if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
         // Save current drawing if any
         let prevData: string | null = null;
         try {
           prevData = canvas.toDataURL();
         } catch {}
 
-        canvas.width = rect.width || 800;
-        canvas.height = rect.height || 480;
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
 
         // Background
         ctx.fillStyle = '#0f172a'; // chalkboard dark slate
@@ -85,16 +89,73 @@ export default function WhiteboardModule({
 
         if (prevData) {
           const img = new Image();
-          img.onload = () => ctx.drawImage(img, 0, 0);
+          img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           img.src = prevData;
+        } else if (whiteboardData) {
+          const img = new Image();
+          img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          img.src = whiteboardData;
         }
       }
     };
 
+    // Initial resize + slight delay for CSS transition
     resizeCanvas();
+    const timeout = setTimeout(resizeCanvas, 80);
     window.addEventListener('resize', resizeCanvas);
-    return () => window.removeEventListener('resize', resizeCanvas);
-  }, [isOpen, isFullscreen]);
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener('resize', resizeCanvas);
+    };
+  }, [isOpen, isFullscreen, whiteboardData]);
+
+  // Handle ESC key to exit fullscreen
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+        onToggleFullscreen?.();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen, onToggleFullscreen]);
+
+  // Listen to browser native fullscreen change
+  useEffect(() => {
+    const handleNativeFullscreenChange = () => {
+      const isNativeFs = Boolean(document.fullscreenElement);
+      if (!isNativeFs && isFullscreen) {
+        onToggleFullscreen?.();
+      }
+    };
+    document.addEventListener('fullscreenchange', handleNativeFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleNativeFullscreenChange);
+  }, [isFullscreen, onToggleFullscreen]);
+
+  // Native fullscreen toggle handler
+  const handleToggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement && !isFullscreen) {
+        if (containerRef.current?.requestFullscreen) {
+          await containerRef.current.requestFullscreen();
+        } else if ((containerRef.current as any)?.webkitRequestFullscreen) {
+          await (containerRef.current as any).webkitRequestFullscreen();
+        }
+      } else if (document.fullscreenElement) {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any)?.webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen();
+        }
+      }
+    } catch (e) {
+      console.warn("Fullscreen toggle notice:", e);
+    }
+    onToggleFullscreen?.();
+  };
 
   // Sync whiteboard from Firebase for students
   useEffect(() => {
@@ -247,11 +308,13 @@ export default function WhiteboardModule({
 
   if (!isOpen) return null;
 
-  return (
+  const whiteboardContent = (
     <div 
       ref={containerRef}
-      className={`w-full h-full relative overflow-hidden bg-slate-900 ${
-        isFullscreen ? 'fixed inset-0 z-50 rounded-none' : 'rounded-3xl'
+      className={`w-full h-full relative overflow-hidden bg-slate-900 transition-all ${
+        isFullscreen 
+          ? 'fixed inset-0 z-[999999] w-screen h-screen rounded-none m-0 p-0 shadow-2xl bg-slate-950' 
+          : 'rounded-3xl'
       }`}
     >
       <canvas
@@ -265,9 +328,20 @@ export default function WhiteboardModule({
         className={`w-full h-full block ${isHostMode ? 'cursor-crosshair' : 'cursor-default'}`}
       />
 
+      {/* Prominent Exit Fullscreen Button when in Fullscreen */}
+      {isFullscreen && (
+        <button
+          onClick={handleToggleFullscreen}
+          className="fixed top-4 left-4 z-[1000000] flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs shadow-2xl transition-all cursor-pointer border border-white/20 animate-pulse"
+        >
+          <Minimize2 className="w-4 h-4" />
+          <span>Exit Fullscreen (ESC)</span>
+        </button>
+      )}
+
       {/* Floating Toolbar for Host / Teacher */}
       {isHostMode && (
-        <div className="absolute top-3 right-3 z-30 flex flex-wrap items-center gap-1.5 bg-black/85 backdrop-blur-md p-2 rounded-2xl border border-stone-700 shadow-2xl max-w-[95%]">
+        <div className={`absolute top-3 right-3 z-30 flex flex-wrap items-center gap-1.5 bg-black/85 backdrop-blur-md p-2 rounded-2xl border border-stone-700 shadow-2xl max-w-[95%] ${isFullscreen ? 'fixed top-4 right-4 z-[1000000]' : ''}`}>
           
           {/* Colors: Blue, Black, Red, Green, White, Orange */}
           <div className="flex items-center gap-1 pr-1 border-r border-stone-700">
@@ -360,25 +434,34 @@ export default function WhiteboardModule({
           </button>
 
           {/* Fullscreen Toggle */}
-          {onToggleFullscreen && (
-            <button
-              onClick={onToggleFullscreen}
-              className="p-1.5 rounded-lg text-xs font-bold text-stone-300 hover:bg-stone-800 transition-colors cursor-pointer"
-              title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Whiteboard'}
-            >
-              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-            </button>
-          )}
+          <button
+            onClick={handleToggleFullscreen}
+            className="p-1.5 rounded-lg text-xs font-bold text-stone-300 hover:bg-stone-800 transition-colors cursor-pointer"
+            title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Whiteboard'}
+          >
+            {isFullscreen ? <Minimize2 className="w-4 h-4 text-orange-400" /> : <Maximize2 className="w-4 h-4" />}
+          </button>
         </div>
       )}
 
-      {/* Student View Only Badge */}
+      {/* Student View Controls & Fullscreen Toggle */}
       {!isHostMode && (
-        <div className="absolute bottom-3 left-3 z-20 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-[11px] text-stone-300">
-          <PenTool className="w-3.5 h-3.5 text-orange-400" />
-          <span>Live Digital Whiteboard (Faculty Arpit Nema Broadcasting)</span>
+        <div className="absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between bg-black/75 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-white/10 text-[11px] text-stone-300">
+          <div className="flex items-center gap-2">
+            <PenTool className="w-3.5 h-3.5 text-orange-400" />
+            <span>Live Digital Whiteboard (Faculty Arpit Nema Broadcasting)</span>
+          </div>
+          <button
+            onClick={handleToggleFullscreen}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-stone-800 hover:bg-stone-700 text-white text-xs font-bold cursor-pointer transition-colors"
+          >
+            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            <span>{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
+          </button>
         </div>
       )}
     </div>
   );
+
+  return isFullscreen ? createPortal(whiteboardContent, document.body) : whiteboardContent;
 }

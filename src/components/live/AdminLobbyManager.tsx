@@ -171,19 +171,19 @@ export default function AdminLobbyManager({
                   <>
                     <button
                       onClick={() => onAllowStudent(participant.id)}
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/25 transition-all cursor-pointer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/30 transition-all cursor-pointer active:scale-95"
                       title="Allow student to enter live class"
                     >
                       <UserCheck className="w-3.5 h-3.5" />
-                      <span>Allow</span>
+                      <span>Allow (प्रवेश दें)</span>
                     </button>
                     <button
                       onClick={() => onDisallowStudent(participant.id)}
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold bg-red-600 hover:bg-red-700 text-white shadow-sm shadow-red-600/25 transition-all cursor-pointer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-600/30 transition-all cursor-pointer active:scale-95"
                       title="Disallow student admission"
                     >
                       <UserX className="w-3.5 h-3.5" />
-                      <span>Disallow</span>
+                      <span>Disallow (मना करें)</span>
                     </button>
                   </>
                 )}

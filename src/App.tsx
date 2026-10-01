@@ -123,6 +123,14 @@ export default function App() {
     const syncRouteWithTab = () => {
       const hash = window.location.hash.replace('#', '').trim();
       const path = window.location.pathname.replace(/^\//, '').trim();
+      const urlParams = new URLSearchParams(window.location.search);
+
+      // If room parameter is in URL query or hash, route directly to onlinetraining
+      if (urlParams.get('room') || hash.includes('room=') || path.includes('onlinetraining')) {
+        setActiveTab('onlinetraining');
+        return;
+      }
+
       const rawRoute = hash || path;
 
       if (!rawRoute) {

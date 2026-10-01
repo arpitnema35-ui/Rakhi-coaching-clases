@@ -99,9 +99,28 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
 
   const [currentRoomCode, setCurrentRoomCode] = useState<string>(getInitialRoom());
 
-  // 2. Admin Authentication State
+  // 1b. Real-time URL parameter listener (Ensures Admin and Student stay in exact same room)
+  useEffect(() => {
+    const handleUrlRoomChange = () => {
+      const room = getInitialRoom();
+      if (room && room !== currentRoomCode) {
+        setCurrentRoomCode(room);
+      }
+    };
+    window.addEventListener('hashchange', handleUrlRoomChange);
+    window.addEventListener('popstate', handleUrlRoomChange);
+    return () => {
+      window.removeEventListener('hashchange', handleUrlRoomChange);
+      window.removeEventListener('popstate', handleUrlRoomChange);
+    };
+  }, [currentRoomCode]);
+
+  // 2. Admin Authentication State (Persists across tab refreshes and matches email)
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
-    return sessionStorage.getItem('rakhi_admin_live_auth') === 'true' || user?.role === 'admin';
+    const savedLocal = localStorage.getItem('rakhi_admin_live_auth') === 'true';
+    const savedSession = sessionStorage.getItem('rakhi_admin_live_auth') === 'true';
+    const isEmailAdmin = user?.email === 'nema2810@gmail.com' || user?.email === 'arpitnema35@gmail.com';
+    return savedLocal || savedSession || user?.role === 'admin' || isEmailAdmin;
   });
   const [isAdminAuthDialogOpen, setIsAdminAuthDialogOpen] = useState(false);
 
@@ -111,6 +130,8 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
   useEffect(() => {
     if (isAdminAuthenticated) {
       setIsHostMode(true);
+      localStorage.setItem('rakhi_admin_live_auth', 'true');
+      sessionStorage.setItem('rakhi_admin_live_auth', 'true');
     }
   }, [isAdminAuthenticated]);
 
@@ -119,6 +140,36 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
   const [chatMessages, setChatMessages] = useState<LiveChatMessage[]>(defaultLiveChatMessages);
   const [participants, setParticipants] = useState<LiveParticipant[]>([]);
   const [activeSubTab, setActiveSubTab] = useState<'overview' | 'lobby' | 'notes' | 'schedule'>('overview');
+
+  // 3b. Pleasant Audio Chime when student knocks / requests to join
+  const playKnockChime = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12); // A5
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.4);
+    } catch {}
+  };
+
+  const prevWaitingCountRef = useRef<number>(0);
+  useEffect(() => {
+    const currentWaiting = participants.filter(p => p.status === 'waiting').length;
+    if (isHostMode && currentWaiting > prevWaitingCountRef.current) {
+      playKnockChime();
+      showToast(`🔔 ${currentWaiting} student${currentWaiting > 1 ? 's' : ''} waiting for admission!`);
+    }
+    prevWaitingCountRef.current = currentWaiting;
+  }, [participants, isHostMode]);
 
   // 4. Student Name & Admission State
   const [studentName, setStudentName] = useState(() => {
@@ -153,6 +204,84 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
+  const screenCaptureIntervalRef = useRef<any>(null);
+  const slideUploadRef = useRef<HTMLInputElement>(null);
+
+  // Local real-time screen mirror frame cache (for smooth instant preview in multi-tab student mode)
+  const [localScreenFrame, setLocalScreenFrame] = useState<string | null>(() => {
+    return localStorage.getItem(`rakhi_screen_${currentRoomCode}`) || null;
+  });
+
+  useEffect(() => {
+    if (isHostMode) return;
+    let bc: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        bc = new BroadcastChannel(`rakhi_screen_${currentRoomCode}`);
+        bc.onmessage = (event) => {
+          if (event.data?.frameData) {
+            setLocalScreenFrame(event.data.frameData);
+          }
+        };
+      } catch {}
+    }
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === `rakhi_screen_${currentRoomCode}` && e.newValue) {
+        setLocalScreenFrame(e.newValue);
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      if (bc) bc.close();
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [currentRoomCode, isHostMode]);
+
+  // Slide / Presentation Image Upload handler (guarantees screen mirror capability anywhere)
+  const handleSlideUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        setLocalScreenFrame(dataUrl);
+        try {
+          localStorage.setItem(`rakhi_screen_${currentRoomCode}`, dataUrl);
+          if (typeof BroadcastChannel !== 'undefined') {
+            const bc = new BroadcastChannel(`rakhi_screen_${currentRoomCode}`);
+            bc.postMessage({ type: 'SCREEN_FRAME', frameData: dataUrl });
+            bc.close();
+          }
+        } catch {}
+        updateLiveSession(currentRoomCode, {
+          activeMode: 'screen',
+          whiteboardData: dataUrl,
+          isLive: true,
+          isWhiteboardActive: false
+        });
+        setActiveDisplayMode('screen');
+        setIsWhiteboardOpen(false);
+        showToast('📄 Study Slide / PPT presentation mirrored to students!');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Clean up media streams and intervals on unmount
+  useEffect(() => {
+    return () => {
+      if (screenCaptureIntervalRef.current) {
+        clearInterval(screenCaptureIntervalRef.current);
+      }
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(t => t.stop());
+      }
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, []);
 
   // 6. Schedule Modal State
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
@@ -370,32 +499,108 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
 
   // 14. Screen Mirroring / Sharing (Google Meet Style)
   const startScreenShare = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+      showToast('⚠️ Screen mirroring is supported on desktop/laptop Chrome or Edge browsers.');
+      return;
+    }
+
     try {
       if (screenStreamRef.current) {
         screenStreamRef.current.getTracks().forEach(t => t.stop());
+        screenStreamRef.current = null;
       }
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: true
-      });
+
+      // Automatically turn off whiteboard view so screen video is immediately visible
+      setIsWhiteboardOpen(false);
+
+      let screenStream: MediaStream;
+      try {
+        screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: {
+            cursor: "always"
+          } as any,
+          audio: false
+        });
+      } catch (err1) {
+        // Fallback for minimal constraints
+        screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      }
+
       screenStreamRef.current = screenStream;
+
       if (videoPreviewRef.current) {
         videoPreviewRef.current.srcObject = screenStream;
-        videoPreviewRef.current.play().catch(e => console.log(e));
+        await videoPreviewRef.current.play().catch(e => console.log(e));
       }
+
       setScreenSharing(true);
       setActiveDisplayMode('screen');
-      showToast('Screen sharing started! Presenting PPT/PDF to students.');
+
+      // Update Firestore live session mode so all students switch to screen view
+      if (isHostMode) {
+        await updateLiveSession(currentRoomCode, {
+          activeMode: 'screen',
+          isWhiteboardActive: false,
+          isLive: true
+        });
+      }
+
+      showToast('🖥️ Screen Mirroring Started! Sharing window / PPT with students.');
+
+      // Periodically capture frame and broadcast to students via Firestore
+      if (screenCaptureIntervalRef.current) {
+        clearInterval(screenCaptureIntervalRef.current);
+      }
+
+      const captureFrame = () => {
+        const v = videoPreviewRef.current;
+        if (!v || v.videoWidth === 0 || v.videoHeight === 0) return;
+        try {
+          const offCanvas = document.createElement('canvas');
+          const maxDim = 800;
+          const scale = Math.min(maxDim / v.videoWidth, maxDim / v.videoHeight, 1);
+          offCanvas.width = Math.round(v.videoWidth * scale);
+          offCanvas.height = Math.round(v.videoHeight * scale);
+          const ctx = offCanvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(v, 0, 0, offCanvas.width, offCanvas.height);
+            const frameData = offCanvas.toDataURL('image/jpeg', 0.55);
+            try {
+              localStorage.setItem(`rakhi_screen_${currentRoomCode}`, frameData);
+              if (typeof BroadcastChannel !== 'undefined') {
+                const bc = new BroadcastChannel(`rakhi_screen_${currentRoomCode}`);
+                bc.postMessage({ type: 'SCREEN_FRAME', frameData });
+                bc.close();
+              }
+            } catch {}
+            updateLiveSession(currentRoomCode, { whiteboardData: frameData });
+          }
+        } catch (e) {
+          console.warn("Screen frame broadcast notice:", e);
+        }
+      };
+
+      setTimeout(captureFrame, 600);
+      screenCaptureIntervalRef.current = setInterval(captureFrame, 2000);
 
       screenStream.getVideoTracks()[0].onended = () => {
         stopScreenShare();
       };
-    } catch (err) {
-      console.warn('Screen share canceled:', err);
+    } catch (err: any) {
+      console.warn('Screen share error or canceled:', err);
+      if (err.name === 'NotAllowedError') {
+        showToast('Screen sharing permission was cancelled.');
+      } else {
+        showToast('Could not start screen mirror: ' + (err.message || 'Please check browser settings.'));
+      }
     }
   };
 
   const stopScreenShare = () => {
+    if (screenCaptureIntervalRef.current) {
+      clearInterval(screenCaptureIntervalRef.current);
+      screenCaptureIntervalRef.current = null;
+    }
     if (screenStreamRef.current) {
       screenStreamRef.current.getTracks().forEach(t => t.stop());
       screenStreamRef.current = null;
@@ -407,9 +612,16 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
         videoPreviewRef.current.play().catch(e => console.log(e));
       }
       setActiveDisplayMode('camera');
+      if (isHostMode) {
+        updateLiveSession(currentRoomCode, { activeMode: 'camera' });
+      }
     } else {
       setActiveDisplayMode(isWhiteboardOpen ? 'whiteboard' : 'camera');
+      if (isHostMode) {
+        updateLiveSession(currentRoomCode, { activeMode: isWhiteboardOpen ? 'whiteboard' : 'camera' });
+      }
     }
+    showToast('Screen sharing stopped.');
   };
 
   // 15. Whiteboard Toggle
@@ -727,8 +939,84 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
           {/* Left Column (2 Cols on Large Screen): Video / Screen / Whiteboard / Waiting Screen */}
           <div className="lg:col-span-2 space-y-4">
             
+            {/* High Visibility Instant Admission Request Banner for Admin */}
+            {isHostMode && waitingCount > 0 && (
+              <div className="p-3.5 sm:p-4 rounded-3xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 shadow-2xl border-2 border-amber-300 backdrop-blur-md space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-2xl bg-slate-950 text-amber-400 flex items-center justify-center font-black text-base shadow-md animate-bounce">
+                      🔔
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-black tracking-tight text-slate-950 flex items-center gap-2">
+                        Student Admission Request ({waitingCount} Pending)
+                      </h4>
+                      <p className="text-[11px] font-semibold text-slate-900/80">
+                        Admin Approval Required: Allow or Disallow student entry into live class
+                      </p>
+                    </div>
+                  </div>
+
+                  {waitingCount > 1 && (
+                    <button
+                      onClick={handleAllowAllWaiting}
+                      className="px-3.5 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-amber-300 text-xs font-black shadow-lg cursor-pointer flex items-center gap-1.5 transition-all active:scale-95"
+                    >
+                      <CheckCheck className="w-3.5 h-3.5" />
+                      <span>Allow All ({waitingCount})</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Waiting student cards */}
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  {participants.filter(p => p.status === 'waiting').map(st => (
+                    <div 
+                      key={st.id}
+                      className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 p-2.5 sm:p-3 bg-white/95 dark:bg-slate-900/95 rounded-2xl border border-amber-300 dark:border-stone-700 shadow-md"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="w-8 h-8 rounded-xl bg-orange-100 dark:bg-stone-800 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold text-sm shrink-0">
+                          👨‍🎓
+                        </span>
+                        <div className="min-w-0">
+                          <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white truncate block">
+                            {st.name}
+                          </span>
+                          <span className="text-[10px] text-stone-500 dark:text-stone-400 flex items-center gap-1.5">
+                            <span>{st.grade || 'Class 12th Commerce'}</span>
+                            <span>•</span>
+                            <span className="text-amber-600 dark:text-amber-400 font-bold">Waiting for your approval</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 ml-auto">
+                        <button
+                          onClick={() => handleAllowStudent(st.id)}
+                          className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/30 flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                          title="Allow student to enter live class"
+                        >
+                          <UserCheck className="w-4 h-4" />
+                          <span>Allow (प्रवेश दें)</span>
+                        </button>
+                        <button
+                          onClick={() => handleDisallowStudent(st.id)}
+                          className="px-3 py-1.5 rounded-xl text-xs font-black bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-600/30 flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                          title="Disallow student admission"
+                        >
+                          <UserX className="w-4 h-4" />
+                          <span>Disallow (मना करें)</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Live Media Stage Container */}
-            <div className="relative w-full aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl border border-stone-800/80">
+            <div className={`relative w-full aspect-video bg-black rounded-3xl shadow-2xl border border-stone-800/80 transition-all ${isWhiteboardFullscreen ? 'overflow-visible' : 'overflow-hidden'}`}>
               
               {/* Overlay Indicators (Live Badge, Viewer Counter, Lobby Notification) */}
               <div className="absolute top-4 left-4 z-20 flex flex-wrap items-center gap-2">
@@ -771,31 +1059,57 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
               ) : (
                 /* Mode B: Live Classroom Stage (Camera, Screen Share, or Whiteboard) */
                 <>
-                  {/* Camera / Screen Share Video Element */}
-                  <video
-                    ref={videoPreviewRef}
-                    className={`w-full h-full object-contain ${
-                      ((activeDisplayMode === 'camera' && cameraActive) || (activeDisplayMode === 'screen' && screenSharing)) && !isWhiteboardOpen
-                        ? 'block'
-                        : 'hidden'
-                    }`}
-                    playsInline
-                    autoPlay
-                    muted={isHostMode}
-                  />
+                  {/* Host Camera or Screen Share Video Stream */}
+                  {isHostMode && (
+                    <video
+                      ref={videoPreviewRef}
+                      className={`w-full h-full object-contain ${
+                        ((activeDisplayMode === 'camera' && cameraActive) || (activeDisplayMode === 'screen' && screenSharing)) && !isWhiteboardOpen
+                          ? 'block'
+                          : 'hidden'
+                      }`}
+                      playsInline
+                      autoPlay
+                      muted
+                    />
+                  )}
+
+                  {/* Student Live Screen Mirror Presentation (Google Meet Style) */}
+                  {!isHostMode && (stream.activeMode === 'screen' || activeDisplayMode === 'screen') && !isWhiteboardOpen && (
+                    <div className="w-full h-full relative flex flex-col items-center justify-center bg-black overflow-hidden">
+                      {(localScreenFrame || stream.whiteboardData) ? (
+                        <img
+                          src={localScreenFrame || stream.whiteboardData}
+                          alt="Faculty Screen Share Presentation"
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="text-center p-6 space-y-3">
+                          <Monitor className="w-12 h-12 text-blue-400 mx-auto animate-pulse" />
+                          <h4 className="text-base font-black text-white">Faculty Arpit Nema is Presenting Screen</h4>
+                          <p className="text-xs text-stone-300">Live PPT / Study Material Mirroring (Google Meet Style)</p>
+                        </div>
+                      )}
+                      <div className="absolute bottom-3 left-3 z-20 flex items-center gap-2 bg-black/75 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/10 text-xs text-blue-300">
+                        <Monitor className="w-3.5 h-3.5 text-blue-400" />
+                        <span>🔴 Live Screen Mirror (Google Meet Style)</span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Interactive Digital Whiteboard */}
                   <WhiteboardModule
                     isHostMode={isHostMode}
-                    isOpen={isWhiteboardOpen}
+                    isOpen={isWhiteboardOpen || (!isHostMode && stream.activeMode === 'whiteboard' && Boolean(stream.isWhiteboardActive))}
                     whiteboardData={stream.whiteboardData}
                     onSyncWhiteboard={handleSyncWhiteboard}
                     onToggleFullscreen={() => setIsWhiteboardFullscreen(!isWhiteboardFullscreen)}
                     isFullscreen={isWhiteboardFullscreen}
                   />
 
-                  {/* Offline Poster (When live has not started and not in waiting room) */}
-                  {(!cameraActive && !screenSharing && !isWhiteboardOpen) && (
+                  {/* Offline Poster (When live has not started or presenter is preparing) */}
+                  {((isHostMode && !cameraActive && !screenSharing && !isWhiteboardOpen) || 
+                    (!isHostMode && stream.activeMode !== 'screen' && activeDisplayMode !== 'screen' && !isWhiteboardOpen && !stream.isWhiteboardActive && !stream.isLive)) && (
                     <div className="w-full h-full relative flex flex-col items-center justify-center p-6 text-center text-white">
                       <div 
                         className="absolute inset-0 bg-cover bg-center filter blur-sm brightness-[0.35]"
@@ -906,9 +1220,27 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
                           ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20' 
                           : 'bg-slate-100 dark:bg-stone-800 text-slate-700 dark:text-stone-300 hover:bg-slate-200'
                       }`}
+                      title="Share full computer screen or Chrome tab (Google Meet style)"
                     >
                       <Monitor className="w-4 h-4 text-blue-500" />
-                      <span>{screenSharing ? 'Stop Screen' : 'Share Screen/PPT'}</span>
+                      <span>{screenSharing ? 'Stop Screen' : 'Share Screen'}</span>
+                    </button>
+
+                    {/* Present Slides / Notes Images (Mirror without display permission) */}
+                    <input
+                      type="file"
+                      ref={slideUploadRef}
+                      accept="image/*,.pdf"
+                      onChange={handleSlideUpload}
+                      className="hidden"
+                    />
+                    <button
+                      onClick={() => slideUploadRef.current?.click()}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-stone-800 text-slate-700 dark:text-stone-300 hover:bg-slate-200 transition-all cursor-pointer"
+                      title="Mirror PPT Slide, PDF Page or Photo to Students"
+                    >
+                      <ImageIcon className="w-4 h-4 text-indigo-500" />
+                      <span>Present Slides/PPT</span>
                     </button>
 
                     {/* Whiteboard ON/OFF Toggle */}

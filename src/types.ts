@@ -223,6 +223,7 @@ export interface LiveParticipant {
   avatar?: string;
   grade?: string;
   rejectionReason?: string;
+  updatedAt?: string;
 }
 
 export interface LiveStreamSession {
