@@ -40,10 +40,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore with experimentalForceLongPolling to eliminate
-// "Could not reach Cloud Firestore backend. Connection failed" in proxy / sandbox / iframe environments
+// Initialize Firestore with experimentalAutoDetectLongPolling to handle proxy / sandbox / iframe environments
 export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
   experimentalAutoDetectLongPolling: true,
 });
 
