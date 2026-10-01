@@ -31,7 +31,6 @@ interface NotesStoreProps {
   setIsCartOpen: (open: boolean) => void;
   onCheckoutComplete: (order: Omit<Order, 'id' | 'createdAt' | 'status'>) => Promise<string>;
   user: UserProfile | null;
-  onLoginClick: () => void;
   gradeFilter?: string;
 }
 
@@ -43,7 +42,6 @@ export default function NotesStore({
   setIsCartOpen,
   onCheckoutComplete,
   user,
-  onLoginClick,
   gradeFilter
 }: NotesStoreProps) {
   
@@ -94,7 +92,6 @@ export default function NotesStore({
       return [...prev, { note, quantity: 1 }];
     });
     if (!user) {
-      onLoginClick();
       return;
     }
     setPaymentModalOpen(true);
@@ -122,7 +119,6 @@ export default function NotesStore({
 
   const handleInitiatePayment = () => {
     if (!user) {
-      onLoginClick();
       return;
     }
     if (cart.length === 0) return;
@@ -157,7 +153,6 @@ export default function NotesStore({
   // 1. Live Razorpay Official Gateway Trigger
   const handlePayWithRazorpay = async () => {
     if (!user) {
-      onLoginClick();
       return;
     }
 

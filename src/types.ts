@@ -213,3 +213,33 @@ export interface AppSettings {
   whatsappNumber: string;
   razorpayKeyId: string;
 }
+
+export interface LiveStreamSession {
+  id: string;
+  title: string;
+  subject: string;
+  grade: string;
+  teacherName: string;
+  isLive: boolean;
+  streamUrl: string; // HLS m3u8 or YouTube Live Embed or Cloudflare Stream
+  streamType: 'hls' | 'embed' | 'video';
+  rtmpServerUrl: string;
+  streamKey: string;
+  scheduledTime?: string;
+  description: string;
+  viewerCount: number;
+  likesCount: number;
+  thumbnail?: string;
+  notesTitle?: string;
+  notesUrl?: string;
+  updatedAt: string;
+}
+
+export interface LiveChatMessage {
+  id: string;
+  senderName: string;
+  senderRole?: 'student' | 'teacher' | 'admin';
+  text: string;
+  createdAt: string;
+  isPinned?: boolean;
+}

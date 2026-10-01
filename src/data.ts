@@ -157,7 +157,7 @@ export const fallbackNotes: Note[] = [
   }
 ];
 
-export const fallbackTests: TestSeries[] = [
+export const fallbackTests: any[] = [
   {
     id: 'test_12_boards_full',
     title: 'Class 12 CBSE Board Predictor Mock Test',
@@ -184,7 +184,7 @@ export const fallbackTests: TestSeries[] = [
   }
 ];
 
-export const fallbackBlogs: Blog[] = [
+export const fallbackBlogs: any[] = [
   {
     id: 'blog_1',
     title: 'How to score 95%+ in Class 12 Boards (Last 3 Months Strategy)',

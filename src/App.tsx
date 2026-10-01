@@ -40,14 +40,6 @@ import {
   fallbackBlogs,
   fallbackTeachers
 } from './data';
-import { 
-  signInWithPopup, 
-  signOut, 
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  updateProfile
-} from 'firebase/auth';
 
 
 // Custom Modules
@@ -61,6 +53,7 @@ import FeedbackPage from './components/FeedbackPage';
 import OnlineTestSeries from './components/OnlineTestSeries';
 import StudentDashboard from './components/StudentDashboard';
 import AdminPanel from './components/AdminPanel';
+import OnlineTraining from './components/OnlineTraining';
 import NotFound from './components/NotFound';
 
 export default function App() {
@@ -72,7 +65,14 @@ export default function App() {
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   
   // Database State Lists
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<UserProfile | null>({
+    uid: 'local_user',
+    email: 'student@example.com',
+    displayName: 'Student',
+    role: 'student',
+    enrolledCourses: ['course_10_board'],
+    createdAt: new Date().toISOString()
+  });
   const [coursesList, setCoursesList] = useState<Course[]>(fallbackCourses);
   const [notesList, setNotesList] = useState<Note[]>(fallbackNotes);
   const [testsList, setTestsList] = useState<TestSeries[]>(fallbackTests);
@@ -85,16 +85,6 @@ export default function App() {
   // Local volatile states
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<Note[]>([]);
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
-  
-  // Auth Form Input States
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [authEmail, setAuthEmail] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
-  const [authName, setAuthName] = useState('');
-  const [authRole, setAuthRole] = useState<'student' | 'teacher' | 'admin'>('student');
-  const [authError, setAuthError] = useState('');
-
 
   // 1. Initial boot data fetching
   useEffect(() => {
@@ -114,40 +104,6 @@ export default function App() {
     loadAllData();
   }, []);
 
-  // 2. Track Firebase Auth state
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      if (fbUser) {
-        // Build or fetch User Profile details
-        const email = fbUser.email || 'student@rakhi.com';
-        
-        let profile: UserProfile = {
-          uid: fbUser.uid,
-          email: email,
-          displayName: fbUser.displayName || email.split('@')[0],
-          photoURL: fbUser.photoURL || undefined,
-          role: email.includes('admin') ? 'admin' : 'student',
-          enrolledCourses: [],
-          createdAt: new Date().toISOString()
-        };
-
-        try {
-          const dbProfile = await safeGetDoc<UserProfile>('users', fbUser.uid, profile);
-          if (dbProfile) {
-            profile = { ...profile, ...dbProfile };
-          }
-        } catch (e) {
-          console.warn("Failed to fetch user profile from DB", e);
-        }
-
-        setUser(profile);
-      } else {
-        setUser(null);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
   // 3. Sync theme class on HTML document
   useEffect(() => {
     if (darkMode) {
@@ -161,7 +117,7 @@ export default function App() {
   useEffect(() => {
     const validTabs = [
       'class11', 'class12', 'notes', 'notes-store',
-      'privacy', 'terms', 'faq', 'admin-panel'
+      'privacy', 'terms', 'faq', 'admin-panel', 'onlinetraining', 'training'
     ];
 
     const syncRouteWithTab = () => {
@@ -185,80 +141,6 @@ export default function App() {
     return () => window.removeEventListener('hashchange', syncRouteWithTab);
   }, []);
 
-  // Auth Submit Handlers
-  const handleAuthSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthError('');
-    
-    if (!authEmail || !authPassword) {
-      setAuthError('Please complete all form credentials.');
-      return;
-    }
-
-    try {
-      if (isSignUp) {
-        if (!authName) {
-          setAuthError('Name is required for sign up.');
-          return;
-        }
-        const userCredential = await createUserWithEmailAndPassword(auth, authEmail, authPassword);
-        await updateProfile(userCredential.user, { displayName: authName });
-        // After this, onAuthStateChanged will fire and catch the updated displayName
-        
-        // Ensure the profile is written to Firestore users collection if you want persistence
-        await safeWriteDoc('users', {
-          id: userCredential.user.uid,
-          email: authEmail,
-          displayName: authName,
-          role: authRole,
-          enrolledCourses: [],
-          createdAt: new Date().toISOString()
-        });
-      } else {
-        await signInWithEmailAndPassword(auth, authEmail, authPassword);
-      }
-      
-      // onAuthStateChanged will handle setting the user profile
-      setLoginModalOpen(false);
-      setAuthEmail('');
-      setAuthPassword('');
-      setAuthName('');
-    } catch (err: any) {
-      console.error("Auth error:", err);
-      // Format common firebase errors
-      if (err.code === 'auth/email-already-in-use') {
-        setAuthError('Email is already registered. Please login instead.');
-      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-        setAuthError('Invalid email or password.');
-      } else if (err.code === 'auth/weak-password') {
-        setAuthError('Password should be at least 6 characters.');
-      } else {
-        setAuthError(err.message || 'Authentication validation failed.');
-      }
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      if (result.user) {
-        setLoginModalOpen(false);
-      }
-    } catch (err: any) {
-      console.error("Google sign-in popup error:", err);
-      setAuthError('Google Sign-In failed. Please try again or use email.');
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (e) {
-      console.error(e);
-    }
-    setUser(null);
-    setActiveTab('home');
-  };
 
   // Switch role simulator (For swift visual sandbox testings)
   const handleSimulateRole = (role: 'student' | 'teacher' | 'admin') => {
@@ -400,8 +282,6 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         user={user}
-        onLoginClick={() => setLoginModalOpen(true)}
-        onLogout={handleLogout}
         cart={cart}
         setIsCartOpen={setIsCartOpen}
         darkMode={darkMode}
@@ -422,7 +302,6 @@ export default function App() {
             setIsCartOpen={setIsCartOpen}
             onCheckoutComplete={handleCheckoutComplete}
             user={user}
-            onLoginClick={() => setLoginModalOpen(true)}
             gradeFilter="Class 12"
           />
         )}
@@ -482,9 +361,17 @@ export default function App() {
           />
         )}
 
+        {/* Online Training Live Streaming Hub (OBS Studio + Firebase) */}
+        {(activeTab === 'onlinetraining' || activeTab === 'training') && (
+          <OnlineTraining
+            user={user}
+            setActiveTab={setActiveTab}
+          />
+        )}
+
         {/* 404 Custom Interactive Page for Non-existent Routes */}
         {(activeTab === '404' || (
-          !['class11', 'class12', 'notes', 'notes-store', 'privacy', 'terms', 'faq', 'admin-panel'].includes(activeTab) && 
+          !['class11', 'class12', 'notes', 'notes-store', 'privacy', 'terms', 'faq', 'admin-panel', 'onlinetraining', 'training'].includes(activeTab) && 
           !activeTab.startsWith('dashboard-')
         )) && (
           <NotFound setActiveTab={setActiveTab} />
@@ -498,143 +385,6 @@ export default function App() {
       {/* 4. WhatsApp Floating Widget */}
       <WhatsAppButton />
 
-      {/* ------------------ AUTHENTICATION LOGIN / SIGNUP MODAL ------------------ */}
-      <AnimatePresence>
-        {loginModalOpen && (
-          <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-sm w-full border border-slate-100 dark:border-slate-800 shadow-2xl relative space-y-6"
-            >
-              <button
-                onClick={() => setLoginModalOpen(false)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer"
-                aria-label="Close Auth"
-              >
-                <X size={18} />
-              </button>
-
-              {/* Title brand */}
-              <div className="text-center space-y-1">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-indigo-600 text-white flex items-center justify-center font-bold text-lg mx-auto shadow-md">
-                  R
-                </div>
-                <h3 className="text-lg font-bold text-slate-950 dark:text-white mt-2">
-                  {isSignUp ? 'Create Student Profile' : 'Sign In to Rakhi Coaching'}
-                </h3>
-                <p className="text-[10px] text-slate-400">Unlock online mock tests, note stores, and progress histories.</p>
-              </div>
-
-              {/* Form submit */}
-              <form onSubmit={handleAuthSubmit} className="space-y-3 text-xs">
-                {authError && (
-                  <div className="p-2.5 bg-red-50 text-red-500 font-semibold rounded-lg flex items-center gap-1">
-                    <AlertCircle size={12} />
-                    <span>{authError}</span>
-                  </div>
-                )}
-
-                {isSignUp && (
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-slate-500 uppercase block">STUDENT FULL NAME</label>
-                    <div className="relative">
-                      <User size={12} className="absolute left-3 top-2.5 text-slate-400" />
-                      <input
-                        type="text"
-                        placeholder="Aman Mishra"
-                        value={authName}
-                        onChange={(e) => setAuthName(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-1">
-                  <label className="text-[9px] font-bold text-slate-500 uppercase block">EMAIL ADDRESS</label>
-                  <div className="relative">
-                    <Mail size={12} className="absolute left-3 top-2.5 text-slate-400" />
-                    <input
-                      type="email"
-                      required
-                      placeholder="student@gmail.com"
-                      value={authEmail}
-                      onChange={(e) => setAuthEmail(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[9px] font-bold text-slate-500 uppercase block">SECRET PASSWORD</label>
-                  <div className="relative">
-                    <Lock size={12} className="absolute left-3 top-2.5 text-slate-400" />
-                    <input
-                      type="password"
-                      required
-                      placeholder="••••••••"
-                      value={authPassword}
-                      onChange={(e) => setAuthPassword(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                {isSignUp && (
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-slate-500 uppercase block">SELECT ROLE</label>
-                    <select
-                      value={authRole}
-                      onChange={(e) => setAuthRole(e.target.value as any)}
-                      className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-850 dark:text-slate-200 focus:outline-none"
-                    >
-                      <option value="student">Student Account</option>
-                      <option value="admin">Full Institutional Admin</option>
-                    </select>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  className="w-full py-2.5 bg-gradient-to-r from-teal-500 to-indigo-600 text-white rounded-xl text-xs font-bold cursor-pointer hover:opacity-95 transition-opacity"
-                >
-                  {isSignUp ? 'Generate Profile' : 'Authorize Sign In'}
-                </button>
-              </form>
-
-              {/* OAuth Google popup trigger */}
-              <div className="space-y-3 pt-2">
-                <div className="relative flex py-1 items-center">
-                  <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-                  <span className="flex-shrink mx-3 text-[10px] text-slate-400 font-bold uppercase font-mono">OR SIGN IN WITH</span>
-                  <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-                </div>
-
-                <button
-                  onClick={handleGoogleSignIn}
-                  className="w-full py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 border border-slate-250 dark:border-slate-700 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 cursor-pointer transition-colors"
-                >
-                  <Sparkles size={13} className="text-amber-500" />
-                  <span>Google Account Single Sign-on</span>
-                </button>
-              </div>
-
-              {/* Alternate toggle */}
-              <div className="text-center pt-2">
-                <button
-                  onClick={() => setIsSignUp(!isSignUp)}
-                  className="text-xs text-teal-600 dark:text-teal-400 hover:underline font-semibold cursor-pointer"
-                >
-                  {isSignUp ? 'Already registered? Sign In' : 'New student? Register Profile'}
-                </button>
-              </div>
-
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
     </div>
   );

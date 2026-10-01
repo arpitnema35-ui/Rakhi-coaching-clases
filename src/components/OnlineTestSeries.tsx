@@ -21,7 +21,6 @@ interface OnlineTestSeriesProps {
   testsList: TestSeries[];
   user: UserProfile | null;
   onSaveResult: (result: Omit<TestResult, 'id' | 'createdAt'>) => Promise<string>;
-  onLoginClick: () => void;
   resultsList: TestResult[];
 }
 
@@ -29,7 +28,6 @@ export default function OnlineTestSeries({
   testsList,
   user,
   onSaveResult,
-  onLoginClick,
   resultsList
 }: OnlineTestSeriesProps) {
   
@@ -60,7 +58,6 @@ export default function OnlineTestSeries({
 
   const handleStartTest = (test: TestSeries) => {
     if (!user) {
-      onLoginClick();
       return;
     }
     setActiveTest(test);

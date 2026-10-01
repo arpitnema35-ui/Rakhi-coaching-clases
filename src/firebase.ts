@@ -20,9 +20,12 @@ import {
   query, 
   where, 
   orderBy,
+  limit,
+  onSnapshot,
   getDocFromServer,
   Firestore
 } from "firebase/firestore";
+import { LiveStreamSession, LiveChatMessage } from "./types";
 
 // User's exact live Firebase configuration
 const firebaseConfig = {
@@ -171,5 +174,147 @@ export async function safeDeleteDoc(collectionName: string, docId: string): Prom
     await deleteDoc(docRef);
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, `${collectionName}/${docId}`);
+  }
+}
+
+// Default Live Stream session for initial display or offline fallback
+export const defaultLiveSession: LiveStreamSession = {
+  id: "current",
+  title: "Class 12th Commerce: Partnership Accounts & Balance Sheet Live Masterclass",
+  subject: "Accountancy & Business Studies",
+  grade: "Class 12",
+  teacherName: "Arpit Nema (Director & Faculty Head)",
+  isLive: true,
+  // Working HLS stream so OBS test & live player works immediately!
+  streamUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+  streamType: "hls",
+  rtmpServerUrl: "rtmps://live.stream.cloudflare.com:443/live/",
+  streamKey: "live_rakhi_comm_7a9f82d1e04b",
+  scheduledTime: "Today at 05:00 PM IST",
+  description: "Live interactive class broadcasted via OBS Studio with real-time Firebase sync. Partnership accounts, goodwill valuation numericals, and board question breakdown.",
+  viewerCount: 184,
+  likesCount: 421,
+  thumbnail: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=80",
+  notesTitle: "Partnership Accounts Complete Formula Cheat-Sheet (PDF)",
+  notesUrl: "#",
+  updatedAt: new Date().toISOString()
+};
+
+// Initial sample messages for the live chat
+export const defaultLiveChatMessages: LiveChatMessage[] = [
+  {
+    id: "msg_pin",
+    senderName: "Arpit Nema (Teacher)",
+    senderRole: "teacher",
+    text: "Welcome to today's live class! We will solve 5 high-yield partnership numericals today. Post your doubts below! 📚",
+    createdAt: new Date(Date.now() - 15 * 60000).toISOString(),
+    isPinned: true
+  },
+  {
+    id: "msg_1",
+    senderName: "Rohit Sharma",
+    senderRole: "student",
+    text: "Good evening Sir! Audio and video are crystal clear from OBS! 👍",
+    createdAt: new Date(Date.now() - 12 * 60000).toISOString()
+  },
+  {
+    id: "msg_2",
+    senderName: "Priya Patel",
+    senderRole: "student",
+    text: "Sir, will you explain Sacrificing Ratio calculation today as well?",
+    createdAt: new Date(Date.now() - 8 * 60000).toISOString()
+  },
+  {
+    id: "msg_3",
+    senderName: "Arpit Nema (Teacher)",
+    senderRole: "teacher",
+    text: "Yes Priya, Sacrificing and Gaining Ratio will be covered right after Goodwill valuation! Stay tuned.",
+    createdAt: new Date(Date.now() - 4 * 60000).toISOString()
+  },
+  {
+    id: "msg_4",
+    senderName: "Aman Gupta",
+    senderRole: "student",
+    text: "Notes downloaded Sir, ready for the questions! 🚀",
+    createdAt: new Date(Date.now() - 1 * 60000).toISOString()
+  }
+];
+
+// Real-time listener for current live stream session
+export function subscribeToLiveStream(callback: (stream: LiveStreamSession) => void): () => void {
+  try {
+    const docRef = doc(db, 'live_sessions', 'current');
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data() as Partial<LiveStreamSession>;
+        callback({
+          ...defaultLiveSession,
+          ...data,
+          id: docSnap.id
+        });
+      } else {
+        callback(defaultLiveSession);
+      }
+    }, (error) => {
+      console.warn("Firestore live stream subscription error, falling back to local state:", error);
+      callback(defaultLiveSession);
+    });
+    return unsubscribe;
+  } catch (error) {
+    console.warn("Failed to subscribe to live stream:", error);
+    callback(defaultLiveSession);
+    return () => {};
+  }
+}
+
+// Update live stream session in Firestore
+export async function updateLiveSession(data: Partial<LiveStreamSession>): Promise<void> {
+  try {
+    const docRef = doc(db, 'live_sessions', 'current');
+    await setDoc(docRef, { ...data, updatedAt: new Date().toISOString() }, { merge: true });
+  } catch (error) {
+    console.warn("Firestore updateLiveSession failed, updating locally:", error);
+  }
+}
+
+// Real-time listener for live chat messages
+export function subscribeToLiveChat(callback: (messages: LiveChatMessage[]) => void): () => void {
+  try {
+    const chatCol = collection(db, 'live_sessions', 'current', 'chat');
+    const q = query(chatCol, orderBy('createdAt', 'asc'), limit(100));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (!snapshot.empty) {
+        const msgs: LiveChatMessage[] = snapshot.docs.map(d => ({
+          id: d.id,
+          ...d.data()
+        } as LiveChatMessage));
+        callback(msgs);
+      } else {
+        callback(defaultLiveChatMessages);
+      }
+    }, (error) => {
+      console.warn("Firestore live chat subscription error, using default messages:", error);
+      callback(defaultLiveChatMessages);
+    });
+    return unsubscribe;
+  } catch (error) {
+    console.warn("Failed to subscribe to live chat:", error);
+    callback(defaultLiveChatMessages);
+    return () => {};
+  }
+}
+
+// Send live chat message to Firestore
+export async function sendLiveChatMessage(msg: Omit<LiveChatMessage, 'id'>): Promise<string> {
+  try {
+    const chatCol = collection(db, 'live_sessions', 'current', 'chat');
+    const docRef = await addDoc(chatCol, {
+      ...msg,
+      createdAt: msg.createdAt || new Date().toISOString()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.warn("Firestore sendLiveChatMessage fallback:", error);
+    return `local_${Date.now()}`;
   }
 }

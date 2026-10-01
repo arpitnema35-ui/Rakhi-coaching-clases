@@ -16,8 +16,6 @@ interface NavbarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   user: UserProfile | null;
-  onLoginClick: () => void;
-  onLogout: () => void;
   cart: CartItem[];
   setIsCartOpen: (open: boolean) => void;
   darkMode: boolean;
@@ -29,8 +27,6 @@ export default function Navbar({
   activeTab,
   setActiveTab,
   user,
-  onLoginClick,
-  onLogout,
   cart,
   setIsCartOpen,
   darkMode,
@@ -44,11 +40,13 @@ export default function Navbar({
   const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   const navLinks = [
-    { id: 'class12', label: 'Class 12th Commerce Notes' }
+    { id: 'class12', label: 'Class 12th Commerce Notes' },
+    { id: 'onlinetraining', label: '🔴 Live Online Training', isLive: true }
   ];
 
   const handleLinkClick = (id: string) => {
     setActiveTab(id);
+    window.location.hash = id;
     setIsMobileMenuOpen(false);
   };
 
@@ -153,7 +151,7 @@ export default function Navbar({
             </div>
 
             {/* User Auth Section */}
-            {user ? (
+            {user && (
               <div className="relative">
                 <button
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
@@ -202,23 +200,9 @@ export default function Navbar({
                       </button>
                     )}
 
-                    <button
-                      onClick={() => { onLogout(); setIsProfileDropdownOpen(false); }}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center space-x-2 cursor-pointer border-t border-orange-100 dark:border-orange-950"
-                    >
-                      <LogOut size={14} />
-                      <span>Sign Out</span>
-                    </button>
                   </div>
                 )}
               </div>
-            ) : (
-              <button
-                onClick={onLoginClick}
-                className="px-3 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-extrabold bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 hover:from-orange-600 hover:to-red-600 rounded-full shadow-lg shadow-orange-500/25 text-white transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] shrink-0"
-              >
-                Get Started
-              </button>
             )}
 
             {/* Hamburger (Mobile Menu Toggle) */}
