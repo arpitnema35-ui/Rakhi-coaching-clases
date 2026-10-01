@@ -214,6 +214,17 @@ export interface AppSettings {
   razorpayKeyId: string;
 }
 
+export interface LiveParticipant {
+  id: string;
+  name: string;
+  role: 'student' | 'admin' | 'teacher';
+  status: 'waiting' | 'admitted' | 'rejected' | 'kicked';
+  joinedAt: string;
+  avatar?: string;
+  grade?: string;
+  rejectionReason?: string;
+}
+
 export interface LiveStreamSession {
   id: string;
   roomCode: string;
@@ -222,15 +233,19 @@ export interface LiveStreamSession {
   grade: string;
   teacherName: string;
   isLive: boolean;
-  activeMode?: 'camera' | 'screen' | 'whiteboard';
+  activeMode: 'camera' | 'screen' | 'whiteboard';
+  cameraFacingMode?: 'user' | 'environment';
   whiteboardData?: string;
+  isWhiteboardActive?: boolean;
+  isChatEnabled?: boolean;
   streamUrl?: string;
   scheduledDate?: string;
   scheduledTime?: string;
+  scheduledDateTime?: string; // ISO timestamp for countdown
+  thumbnailUrl?: string;
   description: string;
   viewerCount: number;
   likesCount: number;
-  thumbnail?: string;
   notesTitle?: string;
   notesUrl?: string;
   updatedAt: string;

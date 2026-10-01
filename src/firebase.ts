@@ -8,7 +8,7 @@ import {
   User as FirebaseUser
 } from "firebase/auth";
 import { 
-  getFirestore, 
+  initializeFirestore,
   doc, 
   getDoc, 
   getDocs, 
@@ -22,10 +22,9 @@ import {
   orderBy,
   limit,
   onSnapshot,
-  getDocFromServer,
   Firestore
 } from "firebase/firestore";
-import { LiveStreamSession, LiveChatMessage } from "./types";
+import { LiveStreamSession, LiveChatMessage, LiveParticipant } from "./types";
 
 // User's exact live Firebase configuration
 const firebaseConfig = {
@@ -40,7 +39,14 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+
+// Initialize Firestore with experimentalForceLongPolling to eliminate
+// "Could not reach Cloud Firestore backend. Connection failed" in proxy / sandbox / iframe environments
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+  experimentalAutoDetectLongPolling: true,
+});
+
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
@@ -73,8 +79,9 @@ interface FirestoreErrorInfo {
 // Global hook to test Firebase connection on startup
 export async function testConnection(): Promise<boolean> {
   try {
-    // Try to connect and fetch a placeholder document
-    await getDocFromServer(doc(db, 'test', 'connection'));
+    // Try to connect and fetch a placeholder document safely
+    const docRef = doc(db, 'test', 'connection');
+    await getDoc(docRef);
     console.log("Firebase Connection verified successfully.");
     return true;
   } catch (error) {
@@ -187,13 +194,17 @@ export const defaultLiveSession: LiveStreamSession = {
   teacherName: "Arpit Nema (Director & Faculty Head)",
   isLive: false,
   activeMode: 'camera',
+  cameraFacingMode: 'user',
+  isWhiteboardActive: false,
+  isChatEnabled: true,
   streamUrl: "",
   scheduledDate: new Date().toISOString().split('T')[0],
   scheduledTime: "05:00 PM IST",
+  scheduledDateTime: new Date(Date.now() + 2 * 3600 * 1000).toISOString(),
+  thumbnailUrl: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80",
   description: "Direct in-browser interactive live coaching. Partnership accounts, goodwill valuation numericals, and board question breakdown.",
   viewerCount: 0,
   likesCount: 142,
-  thumbnail: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=80",
   notesTitle: "Partnership Accounts Complete Formula Cheat-Sheet (PDF)",
   notesUrl: "#",
   updatedAt: new Date().toISOString(),
@@ -350,4 +361,152 @@ export async function sendLiveChatMessage(
     console.warn("Firestore sendLiveChatMessage fallback:", error);
     return `local_${Date.now()}`;
   }
+}
+
+// 1. Subscribe to Participants in a Live Session Room (Waiting / Admitted / Kicked)
+export function subscribeToParticipants(
+  roomId: string,
+  callback: (participants: LiveParticipant[]) => void
+): () => void {
+  try {
+    const colRef = collection(db, 'live_sessions', roomId, 'participants');
+    const q = query(colRef, orderBy('joinedAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const list: LiveParticipant[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as LiveParticipant));
+      callback(list);
+    }, (error) => {
+      console.warn("Firestore participants subscription notice:", error);
+      callback([]);
+    });
+    return unsubscribe;
+  } catch (err) {
+    console.warn("Failed to subscribe to participants:", err);
+    callback([]);
+    return () => {};
+  }
+}
+
+// 2. Student requests to join room (starts in 'waiting' status for host approval)
+export async function requestJoinLiveRoom(
+  roomId: string,
+  studentName: string,
+  studentId?: string,
+  extra?: { grade?: string; avatar?: string }
+): Promise<string> {
+  const pId = studentId || `student_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+  try {
+    const docRef = doc(db, 'live_sessions', roomId, 'participants', pId);
+    const participantData: LiveParticipant = {
+      id: pId,
+      name: studentName.trim() || 'Student',
+      role: 'student',
+      status: 'waiting',
+      joinedAt: new Date().toISOString(),
+      grade: extra?.grade || 'Class 12',
+      avatar: extra?.avatar
+    };
+    await setDoc(docRef, participantData, { merge: true });
+    return pId;
+  } catch (err) {
+    console.warn("Firestore requestJoinLiveRoom notice:", err);
+    return pId;
+  }
+}
+
+// 3. Admin updates student status: 'admitted' (allow) | 'rejected' (disallow) | 'kicked' (kickout)
+export async function updateParticipantStatus(
+  roomId: string,
+  participantId: string,
+  status: 'waiting' | 'admitted' | 'rejected' | 'kicked',
+  reason?: string
+): Promise<void> {
+  try {
+    const docRef = doc(db, 'live_sessions', roomId, 'participants', participantId);
+    const updateData: Record<string, any> = { 
+      status, 
+      updatedAt: new Date().toISOString() 
+    };
+    if (reason) {
+      updateData.rejectionReason = reason;
+    }
+    await updateDoc(docRef, updateData);
+  } catch (err) {
+    console.warn("Firestore updateParticipantStatus notice:", err);
+  }
+}
+
+// 3b. Batch allow all waiting students
+export async function allowAllWaitingParticipants(roomId: string, waitingIds: string[]): Promise<void> {
+  for (const id of waitingIds) {
+    await updateParticipantStatus(roomId, id, 'admitted');
+  }
+}
+
+// 4. Student listens to their own admission status in real-time
+export function subscribeToMyParticipantStatus(
+  roomId: string,
+  participantId: string,
+  callback: (status: 'waiting' | 'admitted' | 'rejected' | 'kicked') => void
+): () => void {
+  try {
+    const docRef = doc(db, 'live_sessions', roomId, 'participants', participantId);
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data() as LiveParticipant;
+        callback(data.status || 'waiting');
+      } else {
+        callback('waiting');
+      }
+    }, (error) => {
+      console.warn("Firestore participant status listener notice:", error);
+    });
+    return unsubscribe;
+  } catch (err) {
+    console.warn("Failed to listen to participant status:", err);
+    return () => {};
+  }
+}
+
+// 5. Admin Security Verification & Database Storage
+// User requested: "Admin user name change Krna h h password vahe hoga nema2810@gmail.com"
+export const SECURE_ADMIN_USER_ID = "nema2810@gmail.com";
+export const SECURE_ADMIN_PASSWORD = "arpit2810";
+
+export async function verifyAndSaveAdminSecurity(userId: string, pass: string): Promise<boolean> {
+  const cleanId = (userId || "").trim().toLowerCase();
+  const cleanPass = (pass || "").trim();
+
+  // Accept primary nema2810@gmail.com, alias nema@2810, short nema2810, or user email arpitnema35@gmail.com
+  const isIdMatch = 
+    cleanId === "nema2810@gmail.com" || 
+    cleanId === "nema@2810" || 
+    cleanId === "nema2810" ||
+    cleanId === "arpitnema35@gmail.com";
+
+  const isPassMatch = cleanPass === "arpit2810";
+
+  const isMatch = isIdMatch && isPassMatch;
+  
+  if (isMatch) {
+    // Non-blocking background audit write to Firebase Firestore
+    // We do NOT await this to ensure instantaneous zero-delay login
+    try {
+      const secRef = doc(db, 'admin_security', 'auth_config');
+      setDoc(secRef, {
+        adminUserId: cleanId,
+        lastLoginAt: new Date().toISOString(),
+        role: 'super_admin',
+        allowedControls: ['camera', 'screen', 'whiteboard', 'allow_disallow_lobby', 'kickout', 'chat_toggle', 'schedule_unique_url']
+      }, { merge: true }).catch((err) => {
+        console.warn("Background Firebase admin audit notice:", err);
+      });
+    } catch (err) {
+      console.warn("Firebase admin audit write notice:", err);
+    }
+  }
+
+  return isMatch;
 }
