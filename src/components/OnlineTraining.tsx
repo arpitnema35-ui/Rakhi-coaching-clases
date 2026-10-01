@@ -28,7 +28,9 @@ import {
   Video,
   ShieldCheck,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  Tv,
+  CheckCircle2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Hls from 'hls.js';
@@ -47,6 +49,47 @@ interface OnlineTrainingProps {
   setActiveTab: (tab: string) => void;
 }
 
+// Smart stream source parser
+function parseStreamSource(rawUrl: string): { type: 'youtube' | 'hls' | 'iframe' | 'video' | 'empty'; embedUrl: string } {
+  if (!rawUrl || !rawUrl.trim()) return { type: 'empty', embedUrl: '' };
+  const trimmed = rawUrl.trim();
+
+  // 1. YouTube Watch / Live / Short / Embed
+  const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+  const ytMatch = trimmed.match(ytRegex);
+  if (ytMatch && ytMatch[1]) {
+    return {
+      type: 'youtube',
+      embedUrl: `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&playsinline=1&rel=0`
+    };
+  }
+
+  // 11-char direct video ID
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
+    return {
+      type: 'youtube',
+      embedUrl: `https://www.youtube-nocookie.com/embed/${trimmed}?autoplay=1&playsinline=1&rel=0`
+    };
+  }
+
+  // 2. HLS Stream (.m3u8) - e.g. from Cloudflare Stream or Media Server
+  if (trimmed.includes('.m3u8')) {
+    return { type: 'hls', embedUrl: trimmed };
+  }
+
+  // 3. Iframe / Embed link (Cloudflare Stream iframe, Vimeo, Twitch)
+  if (trimmed.includes('player.cloudflare.com') || trimmed.includes('player.vimeo.com') || trimmed.includes('player.twitch.tv')) {
+    return { type: 'iframe', embedUrl: trimmed };
+  }
+
+  // 4. Standard video file (.mp4, .webm)
+  if (trimmed.endsWith('.mp4') || trimmed.endsWith('.webm')) {
+    return { type: 'video', embedUrl: trimmed };
+  }
+
+  return { type: 'iframe', embedUrl: trimmed };
+}
+
 export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingProps) {
   // Live Stream state synced with Firebase
   const [stream, setStream] = useState<LiveStreamSession>(defaultLiveSession);
@@ -61,18 +104,20 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isTheatreMode, setIsTheatreMode] = useState(false);
-  const [playerError, setPlayerError] = useState<string | null>(null);
 
   // OBS Control Modal state
   const [isObsModalOpen, setIsObsModalOpen] = useState(false);
+  const [obsTab, setObsTab] = useState<'youtube' | 'rtmp'>('youtube');
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-  // Form edit states for admin
+  // Form edit states for stream
   const [editTitle, setEditTitle] = useState(stream.title);
   const [editStreamUrl, setEditStreamUrl] = useState(stream.streamUrl);
   const [editStreamKey, setEditStreamKey] = useState(stream.streamKey);
   const [showStreamKey, setShowStreamKey] = useState(false);
+  const [quickUrlInput, setQuickUrlInput] = useState('');
+  const [saveSuccessNotice, setSaveSuccessNotice] = useState(false);
 
   // Floating reactions state
   const [floatingReactions, setFloatingReactions] = useState<{ id: number; emoji: string; left: number }[]>([]);
@@ -84,6 +129,9 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
       setEditTitle(updatedStream.title);
       setEditStreamUrl(updatedStream.streamUrl);
       setEditStreamKey(updatedStream.streamKey);
+      if (updatedStream.streamUrl) {
+        setQuickUrlInput(updatedStream.streamUrl);
+      }
     });
 
     const unsubChat = subscribeToLiveChat((messages) => {
@@ -98,50 +146,37 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
     };
   }, []);
 
-  // 2. Setup Video / HLS Stream Player
+  // Parse stream type
+  const parsedSource = parseStreamSource(stream.streamUrl);
+
+  // 2. Setup Video / HLS Stream Player for .m3u8 sources
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !stream.isLive) return;
+    if (!video || !stream.isLive || parsedSource.type !== 'hls') return;
 
-    // Check if stream is HLS (.m3u8)
-    const isHlsStream = stream.streamUrl.includes('.m3u8');
-
-    if (isHlsStream) {
-      if (Hls.isSupported()) {
-        if (hlsRef.current) {
-          hlsRef.current.destroy();
-        }
-        const hls = new Hls({
-          enableWorker: true,
-          lowLatencyMode: true,
-          backBufferLength: 90
-        });
-        hls.loadSource(stream.streamUrl);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          video.play().catch(() => {
-            // Autoplay with sound might be blocked, mute and retry
-            video.muted = true;
-            setIsMuted(true);
-            video.play().catch(e => console.log('Autoplay prevented:', e));
-          });
-        });
-        hls.on(Hls.Events.ERROR, (_, data) => {
-          if (data.fatal) {
-            console.warn('HLS Fatal Error:', data.details);
-            setPlayerError('Stream connecting or offline. Waiting for OBS feed...');
-          }
-        });
-        hlsRef.current = hls;
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        // Native Safari HLS
-        video.src = stream.streamUrl;
-        video.play().catch(e => console.log('Safari playback notice:', e));
+    if (Hls.isSupported()) {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
       }
-    } else {
-      // Standard video file or fallback
-      video.src = stream.streamUrl;
-      video.play().catch(e => console.log('Video playback notice:', e));
+      const hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+        backBufferLength: 60
+      });
+      hls.loadSource(parsedSource.embedUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch(() => {
+          video.muted = true;
+          setIsMuted(true);
+          video.play().catch(e => console.log('Autoplay prevented:', e));
+        });
+      });
+      hlsRef.current = hls;
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Native Safari HLS
+      video.src = parsedSource.embedUrl;
+      video.play().catch(e => console.log('Safari playback notice:', e));
     }
 
     return () => {
@@ -150,7 +185,7 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
         hlsRef.current = null;
       }
     };
-  }, [stream.streamUrl, stream.isLive]);
+  }, [parsedSource.embedUrl, stream.isLive, parsedSource.type]);
 
   // Video control helpers
   const togglePlay = () => {
@@ -193,31 +228,57 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
   const handleToggleLiveStatus = async () => {
     setIsUpdatingStatus(true);
     const newLiveState = !stream.isLive;
-    await updateLiveSession({
+    const updates: Partial<LiveStreamSession> = {
       isLive: newLiveState,
       viewerCount: newLiveState ? 120 + Math.floor(Math.random() * 40) : 0
-    });
-    setStream(prev => ({ ...prev, isLive: newLiveState }));
+    };
+    if (newLiveState && !stream.streamUrl && quickUrlInput.trim()) {
+      updates.streamUrl = quickUrlInput.trim();
+    }
+    await updateLiveSession(updates);
+    setStream(prev => ({ ...prev, ...updates }));
     setIsUpdatingStatus(false);
+  };
+
+  // Quick Go Live handler right from offline card
+  const handleQuickGoLive = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickUrlInput.trim()) {
+      setIsObsModalOpen(true);
+      return;
+    }
+    setIsUpdatingStatus(true);
+    const updates: Partial<LiveStreamSession> = {
+      streamUrl: quickUrlInput.trim(),
+      isLive: true,
+      viewerCount: 140 + Math.floor(Math.random() * 50)
+    };
+    await updateLiveSession(updates);
+    setStream(prev => ({ ...prev, ...updates }));
+    setIsUpdatingStatus(false);
+    setSaveSuccessNotice(true);
+    setTimeout(() => setSaveSuccessNotice(false), 3000);
   };
 
   // Save OBS Settings in Firebase
   const handleSaveObsSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUpdatingStatus(true);
-    await updateLiveSession({
+    const updates: Partial<LiveStreamSession> = {
       title: editTitle,
-      streamUrl: editStreamUrl,
-      streamKey: editStreamKey
-    });
+      streamUrl: editStreamUrl.trim(),
+      streamKey: editStreamKey,
+      isLive: Boolean(editStreamUrl.trim())
+    };
+    await updateLiveSession(updates);
     setStream(prev => ({
       ...prev,
-      title: editTitle,
-      streamUrl: editStreamUrl,
-      streamKey: editStreamKey
+      ...updates
     }));
     setIsUpdatingStatus(false);
     setIsObsModalOpen(false);
+    setSaveSuccessNotice(true);
+    setTimeout(() => setSaveSuccessNotice(false), 3000);
   };
 
   // Send message to Firebase Live Chat
@@ -250,10 +311,9 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
   // Add floating reaction
   const handleReaction = async (emoji: string) => {
     const id = Date.now() + Math.random();
-    const left = Math.floor(Math.random() * 70) + 15; // 15% to 85%
+    const left = Math.floor(Math.random() * 70) + 15;
     setFloatingReactions(prev => [...prev, { id, emoji, left }]);
 
-    // Update likes count in Firebase
     setStream(prev => ({ ...prev, likesCount: prev.likesCount + 1 }));
     updateLiveSession({ likesCount: stream.likesCount + 1 });
 
@@ -273,18 +333,33 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {saveSuccessNotice && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-20 right-6 z-50 bg-emerald-600 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-bold"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Live Stream settings synced to Firebase!</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* 1. Header Bar with Live Indicator & OBS Setup Button */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white/70 dark:bg-stone-900/70 backdrop-blur-xl border border-orange-200/70 dark:border-orange-950/60 p-4 sm:p-5 rounded-3xl shadow-lg shadow-orange-500/5">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            {stream.isLive ? (
+            {stream.isLive && stream.streamUrl ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-red-500 text-white shadow-md shadow-red-500/30 animate-pulse">
                 <span className="w-2 h-2 rounded-full bg-white"></span>
                 🔴 LIVE NOW
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-200 dark:bg-stone-800 text-slate-700 dark:text-stone-300">
-                <Clock className="w-3.5 h-3.5" />
+                <Clock className="w-3.5 h-3.5 text-orange-500" />
                 Stream Offline
               </span>
             )}
@@ -307,7 +382,7 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-md shadow-orange-500/25 transition-all cursor-pointer hover:scale-[1.02]"
           >
             <Radio className="w-4 h-4 animate-spin-slow" />
-            <span>OBS Studio Settings</span>
+            <span>OBS Stream Console</span>
           </button>
 
           <button
@@ -330,18 +405,80 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
           {/* Video Player Box */}
           <div 
             id="live-player-container"
-            className="relative w-full aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl shadow-orange-500/10 border border-black/40 group select-none flex items-center justify-center"
+            className="relative w-full aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl shadow-orange-500/10 border border-stone-800 group select-none flex items-center justify-center"
           >
-            {stream.isLive ? (
+            {stream.isLive && stream.streamUrl ? (
               <>
-                {/* HTML5 / HLS Video Element */}
-                <video
-                  ref={videoRef}
-                  className="w-full h-full object-contain"
-                  playsInline
-                  autoPlay
-                  onClick={togglePlay}
-                />
+                {/* 1. YouTube Live / Embed Player */}
+                {parsedSource.type === 'youtube' && (
+                  <iframe
+                    src={parsedSource.embedUrl}
+                    title="Live Stream"
+                    className="w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                )}
+
+                {/* 2. HLS (.m3u8) / Cloudflare Stream HTML5 Video */}
+                {parsedSource.type === 'hls' && (
+                  <>
+                    <video
+                      ref={videoRef}
+                      className="w-full h-full object-contain"
+                      playsInline
+                      autoPlay
+                      onClick={togglePlay}
+                    />
+
+                    {/* Custom Overlay Controls on Hover */}
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 flex items-center justify-between text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={togglePlay}
+                          className="p-1.5 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
+                        >
+                          {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-white" />}
+                        </button>
+                        <button
+                          onClick={toggleMute}
+                          className="p-1.5 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
+                        >
+                          {isMuted ? <VolumeX className="w-5 h-5 text-red-400" /> : <Volume2 className="w-5 h-5" />}
+                        </button>
+                        <span className="text-xs font-medium text-stone-300">
+                          OBS Live Ingest (HLS)
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setIsTheatreMode(!isTheatreMode)}
+                          className="hidden sm:block p-1.5 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                        >
+                          {isTheatreMode ? 'Standard' : 'Theatre'}
+                        </button>
+                        <button
+                          onClick={toggleFullscreen}
+                          className="p-1.5 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <Maximize2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* 3. General Iframe (Twitch / Vimeo / Cloudflare) */}
+                {parsedSource.type === 'iframe' && (
+                  <iframe
+                    src={parsedSource.embedUrl}
+                    title="Live Stream Embed"
+                    className="w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                )}
 
                 {/* Floating Reactions overlay */}
                 <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -368,79 +505,71 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
                     <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
                     LIVE
                   </span>
-                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-black/60 text-white backdrop-blur-md">
+                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-black/70 text-white backdrop-blur-md">
                     <Users className="w-3.5 h-3.5 text-orange-400" />
-                    {stream.viewerCount} watching
+                    {stream.viewerCount || 128} watching
                   </span>
-                  <span className="hidden sm:flex items-center px-2 py-1 rounded-lg text-[10px] font-medium bg-black/50 text-white/80 backdrop-blur-md">
-                    1080p 60fps • Low Latency
+                  <span className="hidden sm:flex items-center px-2 py-1 rounded-lg text-[10px] font-medium bg-black/60 text-white/90 backdrop-blur-md">
+                    OBS Studio Stream • 1080p
                   </span>
-                </div>
-
-                {/* Custom Overlay Controls on Hover */}
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 flex items-center justify-between text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={togglePlay}
-                      className="p-1.5 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
-                    >
-                      {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-white" />}
-                    </button>
-                    <button
-                      onClick={toggleMute}
-                      className="p-1.5 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
-                    >
-                      {isMuted ? <VolumeX className="w-5 h-5 text-red-400" /> : <Volume2 className="w-5 h-5" />}
-                    </button>
-                    <span className="text-xs font-medium text-stone-300">
-                      Live Broadcast (OBS Ingest)
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setIsTheatreMode(!isTheatreMode)}
-                      className="hidden sm:block p-1.5 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors cursor-pointer"
-                      title="Toggle Theatre Mode"
-                    >
-                      {isTheatreMode ? 'Standard View' : 'Theatre View'}
-                    </button>
-                    <button
-                      onClick={toggleFullscreen}
-                      className="p-1.5 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
-                      title="Fullscreen"
-                    >
-                      <Maximize2 className="w-5 h-5" />
-                    </button>
-                  </div>
                 </div>
               </>
             ) : (
-              /* Offline Poster Screen */
-              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-stone-900 via-stone-950 to-black text-white relative">
-                <div className="w-16 h-16 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center mb-4 text-orange-400 shadow-inner">
-                  <Radio className="w-8 h-8" />
+              /* Professional Offline & Stream Ingest Setup Screen (NO DUMMY CARTOON VIDEO!) */
+              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#18110b] via-[#120a06] to-black text-white relative">
+                
+                {/* Background decorative glow */}
+                <div className="absolute w-72 h-72 bg-orange-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div className="relative z-10 max-w-lg space-y-4">
+                  <div className="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-tr from-orange-500 to-red-500 text-white flex items-center justify-center shadow-lg shadow-orange-500/30">
+                    <Tv className="w-8 h-8" />
+                  </div>
+
+                  <div>
+                    <span className="inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/30 mb-2">
+                      Live Classroom Offline
+                    </span>
+                    <h2 className="text-lg sm:text-2xl font-black text-white tracking-tight">
+                      Rakhi Coaching Live Classroom
+                    </h2>
+                    <p className="text-stone-400 text-xs sm:text-sm mt-1">
+                      Faculty <strong>{stream.teacherName}</strong> has not started broadcasting from OBS Studio yet. Next scheduled session: <span className="text-orange-400 font-semibold">{stream.scheduledTime}</span>.
+                    </p>
+                  </div>
+
+                  {/* Direct Input for Teacher to Start Live Stream with OBS Link */}
+                  <form onSubmit={handleQuickGoLive} className="pt-2 space-y-2">
+                    <div className="flex flex-col sm:flex-row items-center gap-2 bg-stone-900/90 p-1.5 rounded-2xl border border-stone-800">
+                      <input
+                        type="text"
+                        value={quickUrlInput}
+                        onChange={(e) => setQuickUrlInput(e.target.value)}
+                        placeholder="Teacher: Paste YouTube Live or Stream URL here..."
+                        className="w-full px-3 py-2 text-xs bg-transparent text-white placeholder:text-stone-500 focus:outline-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={isUpdatingStatus}
+                        className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-md shadow-orange-500/20 transition-all cursor-pointer shrink-0"
+                      >
+                        {isUpdatingStatus ? 'Starting...' : '🔴 Start Stream'}
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-center gap-3 pt-1 text-[11px] text-stone-400">
+                      <button
+                        type="button"
+                        onClick={() => setIsObsModalOpen(true)}
+                        className="text-orange-400 hover:text-orange-300 font-bold underline cursor-pointer"
+                      >
+                        OBS Studio RTMP & Stream Key Settings
+                      </button>
+                    </div>
+                  </form>
+
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold mb-1">
-                  Live Class is Currently Offline
-                </h3>
-                <p className="text-stone-400 text-xs sm:text-sm max-w-md mb-4">
-                  The faculty has not started broadcasting from OBS Studio yet. Next scheduled session: <span className="text-orange-400 font-semibold">{stream.scheduledTime}</span>.
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  <button
-                    onClick={() => setIsObsModalOpen(true)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-orange-500 hover:bg-orange-600 text-white transition-all cursor-pointer"
-                  >
-                    Teacher: Start Streaming with OBS
-                  </button>
-                  <button
-                    onClick={() => handleToggleLiveStatus()}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 transition-all cursor-pointer"
-                  >
-                    Simulate Live Now 🔴
-                  </button>
-                </div>
+
               </div>
             )}
           </div>
@@ -449,7 +578,7 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
           <div className="flex items-center justify-between bg-white/70 dark:bg-stone-900/70 border border-orange-200/60 dark:border-orange-950/60 p-3 rounded-2xl shadow-sm">
             <span className="text-xs font-bold text-slate-700 dark:text-stone-300 flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-orange-500" />
-              Live Reaction to Teacher:
+              Live Reaction to Faculty:
             </span>
             <div className="flex items-center gap-1.5 sm:gap-2">
               {[
@@ -517,8 +646,8 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
                     <span className="text-xs font-bold text-slate-800 dark:text-stone-200">CBSE & State Board 2026</span>
                   </div>
                   <div className="p-3 rounded-2xl bg-orange-50/50 dark:bg-stone-800/50 border border-orange-200/40 dark:border-stone-700/50">
-                    <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider block">Interactive Doubts</span>
-                    <span className="text-xs font-bold text-slate-800 dark:text-stone-200">Live in Side Chat</span>
+                    <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider block">Broadcast Standard</span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-stone-200">OBS Studio Direct Ingest</span>
                   </div>
                 </div>
               </div>
@@ -615,11 +744,11 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
               </span>
             </div>
 
-            {/* Pinned Teacher Announcement */}
+            {/* Pinned Faculty Announcement */}
             <div className="p-2.5 bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-transparent border-b border-orange-200/40 dark:border-orange-950/40 text-[11px] text-slate-700 dark:text-stone-300 flex items-start gap-2">
               <Sparkles className="w-3.5 h-3.5 text-orange-500 shrink-0 mt-0.5" />
               <span>
-                <strong>Teacher Notice:</strong> Feel free to ask any doubt from today's numericals!
+                <strong>Faculty Notice:</strong> Feel free to ask any doubt during today's live class!
               </span>
             </div>
 
@@ -641,7 +770,7 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
                         {msg.senderName}
                         {isTeacher && (
                           <span className="text-[9px] bg-orange-500 text-white px-1.5 py-0.2 rounded-md font-bold uppercase">
-                            Teacher
+                            Faculty
                           </span>
                         )}
                       </span>
@@ -684,24 +813,24 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
       {/* 3. OBS Studio Configuration & Firebase Sync Modal (Tarika 1) */}
       <AnimatePresence>
         {isObsModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-2xl bg-white dark:bg-stone-900 border border-orange-200 dark:border-stone-800 rounded-3xl shadow-2xl p-6 space-y-6 max-h-[90vh] overflow-y-auto"
+              className="w-full max-w-2xl bg-white dark:bg-stone-900 border border-orange-200 dark:border-stone-800 rounded-3xl shadow-2xl p-6 space-y-5 max-h-[92vh] overflow-y-auto"
             >
-              <div className="flex items-center justify-between border-b border-orange-100 dark:border-stone-800 pb-4">
+              <div className="flex items-center justify-between border-b border-orange-100 dark:border-stone-800 pb-3">
                 <div className="flex items-center gap-2.5">
                   <div className="w-10 h-10 rounded-2xl bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold">
                     <Radio className="w-5 h-5" />
                   </div>
                   <div>
                     <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-stone-100">
-                      Tarika 1: OBS Studio Live Ingest & Firebase Sync
+                      OBS Studio Live Ingest & Firebase Sync
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-stone-400">
-                      Connect your desktop OBS Studio stream to this website in real-time.
+                      OBS Studio se apni official website par live broadcast connect karein.
                     </p>
                   </div>
                 </div>
@@ -713,113 +842,138 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
                 </button>
               </div>
 
-              {/* 5-Step Instructions for OBS */}
-              <div className="p-4 rounded-2xl bg-orange-50/70 dark:bg-stone-800/60 border border-orange-200/60 dark:border-stone-700/60 space-y-2 text-xs">
-                <h4 className="font-black text-orange-600 dark:text-orange-400 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4" />
-                  How to broadcast from OBS Studio:
-                </h4>
-                <ol className="list-decimal list-inside space-y-1 text-slate-700 dark:text-stone-300">
-                  <li>Open <strong>OBS Studio</strong> on your computer.</li>
-                  <li>Click <strong>Settings</strong> &gt; <strong>Stream</strong>.</li>
-                  <li>Select Service: <strong>Custom...</strong></li>
-                  <li>Paste the <strong>Server (RTMP URL)</strong> & <strong>Stream Key</strong> given below.</li>
-                  <li>Click <strong>Start Streaming</strong> in OBS!</li>
-                </ol>
+              {/* Method Switcher Tabs */}
+              <div className="grid grid-cols-2 gap-2 bg-slate-100 dark:bg-stone-800/80 p-1.5 rounded-2xl">
+                <button
+                  type="button"
+                  onClick={() => setObsTab('youtube')}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    obsTab === 'youtube'
+                      ? 'bg-white dark:bg-stone-900 text-orange-600 dark:text-orange-400 shadow-sm'
+                      : 'text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-stone-200'
+                  }`}
+                >
+                  ⭐ Option 1: YouTube Live via OBS (100% Free & Recommended)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setObsTab('rtmp')}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    obsTab === 'rtmp'
+                      ? 'bg-white dark:bg-stone-900 text-orange-600 dark:text-orange-400 shadow-sm'
+                      : 'text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-stone-200'
+                  }`}
+                >
+                  Option 2: Cloudflare / Custom RTMP Server
+                </button>
               </div>
 
-              {/* Server URL & Stream Key Copy Box */}
-              <div className="space-y-4">
-                
-                {/* RTMP Server URL */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-stone-300 mb-1">
-                    1. Server (RTMP Ingest URL):
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      readOnly
-                      value={stream.rtmpServerUrl}
-                      className="flex-1 px-3 py-2 text-xs font-mono rounded-xl bg-slate-100 dark:bg-stone-800 text-slate-800 dark:text-stone-200 border border-slate-200 dark:border-stone-700 focus:outline-none select-all"
-                    />
-                    <button
-                      onClick={() => handleCopy(stream.rtmpServerUrl, 'server')}
-                      className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold bg-orange-500 hover:bg-orange-600 text-white transition-all cursor-pointer shrink-0"
-                    >
-                      {copiedField === 'server' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiedField === 'server' ? 'Copied!' : 'Copy'}</span>
-                    </button>
+              {/* Instructions per selected tab */}
+              {obsTab === 'youtube' ? (
+                <div className="p-4 rounded-2xl bg-orange-50/70 dark:bg-stone-800/60 border border-orange-200/60 dark:border-stone-700/60 space-y-2 text-xs">
+                  <h4 className="font-black text-orange-600 dark:text-orange-400 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4" />
+                    YouTube Live + OBS Studio Setup (Sabse Saral):
+                  </h4>
+                  <ol className="list-decimal list-inside space-y-1.5 text-slate-700 dark:text-stone-300">
+                    <li>Apne computer me <strong>OBS Studio</strong> open karein.</li>
+                    <li><strong>Settings &gt; Stream</strong> me jakar Service me <strong>YouTube - RTMPS</strong> chunein.</li>
+                    <li>OBS me <strong>"Start Streaming"</strong> button dabayein.</li>
+                    <li>Apne YouTube Live stream ka link ya Video ID neeche input box me paste karein.</li>
+                    <li><strong>"Save Changes & Go Live"</strong> dabate hi website par live stream shuru ho jayegi!</li>
+                  </ol>
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl bg-stone-100 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-700/60 space-y-3 text-xs">
+                  <h4 className="font-black text-slate-800 dark:text-stone-200 uppercase tracking-wider text-[11px]">
+                    Custom RTMP Ingest Credentials:
+                  </h4>
+                  
+                  {/* RTMP Server URL */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-stone-400 mb-1">
+                      Server (RTMP Ingest URL):
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={stream.rtmpServerUrl}
+                        className="flex-1 px-3 py-2 text-xs font-mono rounded-xl bg-white dark:bg-stone-900 text-slate-800 dark:text-stone-200 border border-slate-200 dark:border-stone-700 select-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(stream.rtmpServerUrl, 'server')}
+                        className="px-3 py-2 rounded-xl text-xs font-bold bg-orange-500 text-white cursor-pointer"
+                      >
+                        {copiedField === 'server' ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Stream Key */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 dark:text-stone-400 mb-1">
+                      Stream Key:
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type={showStreamKey ? "text" : "password"}
+                        readOnly
+                        value={stream.streamKey}
+                        className="flex-1 px-3 py-2 text-xs font-mono rounded-xl bg-white dark:bg-stone-900 text-slate-800 dark:text-stone-200 border border-slate-200 dark:border-stone-700 select-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowStreamKey(!showStreamKey)}
+                        className="px-2.5 py-2 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-stone-700 text-slate-700 dark:text-stone-300 cursor-pointer"
+                      >
+                        {showStreamKey ? 'Hide' : 'Show'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(stream.streamKey, 'key')}
+                        className="px-3 py-2 rounded-xl text-xs font-bold bg-orange-500 text-white cursor-pointer"
+                      >
+                        {copiedField === 'key' ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                {/* Stream Key */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-stone-300 mb-1">
-                    2. Stream Key (Secret):
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type={showStreamKey ? "text" : "password"}
-                      readOnly
-                      value={stream.streamKey}
-                      className="flex-1 px-3 py-2 text-xs font-mono rounded-xl bg-slate-100 dark:bg-stone-800 text-slate-800 dark:text-stone-200 border border-slate-200 dark:border-stone-700 focus:outline-none select-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowStreamKey(!showStreamKey)}
-                      className="px-2.5 py-2 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-stone-700 text-slate-700 dark:text-stone-300 hover:bg-slate-300 cursor-pointer"
-                    >
-                      {showStreamKey ? 'Hide' : 'Show'}
-                    </button>
-                    <button
-                      onClick={() => handleCopy(stream.streamKey, 'key')}
-                      className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold bg-orange-500 hover:bg-orange-600 text-white transition-all cursor-pointer shrink-0"
-                    >
-                      {copiedField === 'key' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiedField === 'key' ? 'Copied!' : 'Copy'}</span>
-                    </button>
-                  </div>
-                </div>
-
-              </div>
+              )}
 
               {/* Form to update Stream metadata & live status */}
-              <form onSubmit={handleSaveObsSettings} className="space-y-4 pt-2 border-t border-orange-100 dark:border-stone-800">
-                <h4 className="font-bold text-xs text-slate-800 dark:text-stone-200">
-                  Broadcast Details (Saved in Firebase Firestore)
-                </h4>
-
+              <form onSubmit={handleSaveObsSettings} className="space-y-4 pt-1">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-stone-400 mb-1">
-                    Session Title:
-                  </label>
-                  <input
-                    type="text"
-                    value={editTitle}
-                    onChange={(e) => setEditTitle(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-stone-800 text-slate-900 dark:text-stone-100 border border-slate-200 dark:border-stone-700 focus:border-orange-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-stone-400 mb-1">
-                    HLS Playback URL (.m3u8 or Cloudflare Stream or YouTube Embed URL):
+                  <label className="block text-xs font-bold text-slate-800 dark:text-stone-200 mb-1">
+                    Live Stream URL ya Video ID (YouTube Live Link / HLS .m3u8):
                   </label>
                   <input
                     type="text"
                     value={editStreamUrl}
                     onChange={(e) => setEditStreamUrl(e.target.value)}
-                    placeholder="https://.../stream.m3u8"
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-stone-800 text-slate-900 dark:text-stone-100 border border-slate-200 dark:border-stone-700 focus:border-orange-500 focus:outline-none font-mono"
+                    placeholder="https://www.youtube.com/watch?v=... ya https://.../stream.m3u8"
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-stone-800 text-slate-900 dark:text-stone-100 border border-slate-200 dark:border-stone-700 focus:border-orange-500 focus:outline-none font-mono"
                   />
-                  <span className="text-[10px] text-slate-400 mt-1 block">
-                    Default test stream provided for instant verification. You can replace with your Cloudflare Stream HLS or YouTube Live link.
-                  </span>
+                  <p className="text-[10px] text-slate-500 dark:text-stone-400 mt-1">
+                    Jab tak aap yahan apna live stream link nahi daalenge, tab tak koi faltu ya dummy video nahi chalegi, sirf official classroom screen dikhayi degi.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 dark:text-stone-200 mb-1">
+                    Class Title / Topic:
+                  </label>
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-stone-800 text-slate-900 dark:text-stone-100 border border-slate-200 dark:border-stone-700 focus:border-orange-500 focus:outline-none"
+                  />
                 </div>
 
                 {/* Status Toggle & Submit */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-orange-100 dark:border-stone-800">
                   <button
                     type="button"
                     onClick={handleToggleLiveStatus}
@@ -845,9 +999,9 @@ export default function OnlineTraining({ user, setActiveTab }: OnlineTrainingPro
                     <button
                       type="submit"
                       disabled={isUpdatingStatus}
-                      className="px-4 py-2 rounded-xl text-xs font-bold bg-orange-500 hover:bg-orange-600 text-white shadow-md shadow-orange-500/20 cursor-pointer"
+                      className="px-4 py-2.5 rounded-xl text-xs font-bold bg-orange-500 hover:bg-orange-600 text-white shadow-md shadow-orange-500/20 cursor-pointer"
                     >
-                      {isUpdatingStatus ? 'Saving to Firebase...' : 'Save Changes'}
+                      {isUpdatingStatus ? 'Saving to Firebase...' : 'Save & Update'}
                     </button>
                   </div>
                 </div>
