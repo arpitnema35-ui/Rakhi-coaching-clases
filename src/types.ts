@@ -216,15 +216,16 @@ export interface AppSettings {
 
 export interface LiveStreamSession {
   id: string;
+  roomCode: string;
   title: string;
   subject: string;
   grade: string;
   teacherName: string;
   isLive: boolean;
-  streamUrl: string; // HLS m3u8 or YouTube Live Embed or Cloudflare Stream
-  streamType: 'hls' | 'embed' | 'video';
-  rtmpServerUrl: string;
-  streamKey: string;
+  activeMode?: 'camera' | 'screen' | 'whiteboard';
+  whiteboardData?: string;
+  streamUrl?: string;
+  scheduledDate?: string;
   scheduledTime?: string;
   description: string;
   viewerCount: number;
@@ -233,6 +234,7 @@ export interface LiveStreamSession {
   notesTitle?: string;
   notesUrl?: string;
   updatedAt: string;
+  createdAt?: string;
 }
 
 export interface LiveChatMessage {

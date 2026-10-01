@@ -180,30 +180,31 @@ export async function safeDeleteDoc(collectionName: string, docId: string): Prom
 // Default Live Stream session for initial display or offline fallback
 export const defaultLiveSession: LiveStreamSession = {
   id: "current",
+  roomCode: "live-commerce-12",
   title: "Class 12th Commerce: Partnership Accounts & Balance Sheet Live Masterclass",
   subject: "Accountancy & Business Studies",
   grade: "Class 12",
   teacherName: "Arpit Nema (Director & Faculty Head)",
   isLive: false,
-  streamUrl: "", // No dummy/cartoon video! Only plays when teacher sets actual stream link
-  streamType: "embed",
-  rtmpServerUrl: "rtmps://live.stream.cloudflare.com:443/live/",
-  streamKey: "live_rakhi_comm_7a9f82d1e04b",
-  scheduledTime: "Daily at 05:00 PM IST",
-  description: "Live interactive coaching broadcasted via OBS Studio with real-time Firebase sync. Partnership accounts, goodwill valuation numericals, and board question breakdown.",
+  activeMode: 'camera',
+  streamUrl: "",
+  scheduledDate: new Date().toISOString().split('T')[0],
+  scheduledTime: "05:00 PM IST",
+  description: "Direct in-browser interactive live coaching. Partnership accounts, goodwill valuation numericals, and board question breakdown.",
   viewerCount: 0,
   likesCount: 142,
   thumbnail: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=80",
   notesTitle: "Partnership Accounts Complete Formula Cheat-Sheet (PDF)",
   notesUrl: "#",
-  updatedAt: new Date().toISOString()
+  updatedAt: new Date().toISOString(),
+  createdAt: new Date().toISOString()
 };
 
 // Initial sample messages for the live chat
 export const defaultLiveChatMessages: LiveChatMessage[] = [
   {
     id: "msg_pin",
-    senderName: "Arpit Nema (Teacher)",
+    senderName: "Arpit Nema (Faculty)",
     senderRole: "teacher",
     text: "Welcome to today's live class! We will solve 5 high-yield partnership numericals today. Post your doubts below! 📚",
     createdAt: new Date(Date.now() - 15 * 60000).toISOString(),
@@ -213,7 +214,7 @@ export const defaultLiveChatMessages: LiveChatMessage[] = [
     id: "msg_1",
     senderName: "Rohit Sharma",
     senderRole: "student",
-    text: "Good evening Sir! Audio and video are crystal clear from OBS! 👍",
+    text: "Good evening Sir! Audio and video are crystal clear! 👍",
     createdAt: new Date(Date.now() - 12 * 60000).toISOString()
   },
   {
@@ -225,9 +226,9 @@ export const defaultLiveChatMessages: LiveChatMessage[] = [
   },
   {
     id: "msg_3",
-    senderName: "Arpit Nema (Teacher)",
+    senderName: "Arpit Nema (Faculty)",
     senderRole: "teacher",
-    text: "Yes Priya, Sacrificing and Gaining Ratio will be covered right after Goodwill valuation! Stay tuned.",
+    text: "Yes Priya, Sacrificing and Gaining Ratio will be covered on the whiteboard! Stay tuned.",
     createdAt: new Date(Date.now() - 4 * 60000).toISOString()
   },
   {
@@ -239,24 +240,39 @@ export const defaultLiveChatMessages: LiveChatMessage[] = [
   }
 ];
 
-// Real-time listener for current live stream session
-export function subscribeToLiveStream(callback: (stream: LiveStreamSession) => void): () => void {
+// Helper to normalize roomId and callback
+export function subscribeToLiveStream(
+  arg1: string | ((stream: LiveStreamSession) => void),
+  arg2?: (stream: LiveStreamSession) => void
+): () => void {
+  const roomId = typeof arg1 === 'string' ? arg1 : 'current';
+  const callback = typeof arg1 === 'function' ? arg1 : arg2!;
+
   try {
-    const docRef = doc(db, 'live_sessions', 'current');
+    const docRef = doc(db, 'live_sessions', roomId);
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data() as Partial<LiveStreamSession>;
         callback({
           ...defaultLiveSession,
           ...data,
-          id: docSnap.id
+          id: docSnap.id,
+          roomCode: data.roomCode || roomId
         });
       } else {
-        callback(defaultLiveSession);
+        callback({
+          ...defaultLiveSession,
+          id: roomId,
+          roomCode: roomId
+        });
       }
     }, (error) => {
-      console.warn("Firestore live stream subscription error, falling back to local state:", error);
-      callback(defaultLiveSession);
+      console.warn("Firestore live stream subscription notice:", error);
+      callback({
+        ...defaultLiveSession,
+        id: roomId,
+        roomCode: roomId
+      });
     });
     return unsubscribe;
   } catch (error) {
@@ -267,19 +283,31 @@ export function subscribeToLiveStream(callback: (stream: LiveStreamSession) => v
 }
 
 // Update live stream session in Firestore
-export async function updateLiveSession(data: Partial<LiveStreamSession>): Promise<void> {
+export async function updateLiveSession(
+  arg1: string | Partial<LiveStreamSession>,
+  arg2?: Partial<LiveStreamSession>
+): Promise<void> {
+  const roomId = typeof arg1 === 'string' ? arg1 : 'current';
+  const data = typeof arg1 === 'object' ? arg1 : arg2!;
+
   try {
-    const docRef = doc(db, 'live_sessions', 'current');
+    const docRef = doc(db, 'live_sessions', roomId);
     await setDoc(docRef, { ...data, updatedAt: new Date().toISOString() }, { merge: true });
   } catch (error) {
-    console.warn("Firestore updateLiveSession failed, updating locally:", error);
+    console.warn("Firestore updateLiveSession notice:", error);
   }
 }
 
 // Real-time listener for live chat messages
-export function subscribeToLiveChat(callback: (messages: LiveChatMessage[]) => void): () => void {
+export function subscribeToLiveChat(
+  arg1: string | ((messages: LiveChatMessage[]) => void),
+  arg2?: (messages: LiveChatMessage[]) => void
+): () => void {
+  const roomId = typeof arg1 === 'string' ? arg1 : 'current';
+  const callback = typeof arg1 === 'function' ? arg1 : arg2!;
+
   try {
-    const chatCol = collection(db, 'live_sessions', 'current', 'chat');
+    const chatCol = collection(db, 'live_sessions', roomId, 'chat');
     const q = query(chatCol, orderBy('createdAt', 'asc'), limit(100));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       if (!snapshot.empty) {
@@ -292,7 +320,7 @@ export function subscribeToLiveChat(callback: (messages: LiveChatMessage[]) => v
         callback(defaultLiveChatMessages);
       }
     }, (error) => {
-      console.warn("Firestore live chat subscription error, using default messages:", error);
+      console.warn("Firestore live chat subscription notice:", error);
       callback(defaultLiveChatMessages);
     });
     return unsubscribe;
@@ -304,9 +332,15 @@ export function subscribeToLiveChat(callback: (messages: LiveChatMessage[]) => v
 }
 
 // Send live chat message to Firestore
-export async function sendLiveChatMessage(msg: Omit<LiveChatMessage, 'id'>): Promise<string> {
+export async function sendLiveChatMessage(
+  arg1: string | Omit<LiveChatMessage, 'id'>,
+  arg2?: Omit<LiveChatMessage, 'id'>
+): Promise<string> {
+  const roomId = typeof arg1 === 'string' ? arg1 : 'current';
+  const msg = typeof arg1 === 'object' ? arg1 : arg2!;
+
   try {
-    const chatCol = collection(db, 'live_sessions', 'current', 'chat');
+    const chatCol = collection(db, 'live_sessions', roomId, 'chat');
     const docRef = await addDoc(chatCol, {
       ...msg,
       createdAt: msg.createdAt || new Date().toISOString()

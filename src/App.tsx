@@ -122,12 +122,15 @@ export default function App() {
 
     const syncRouteWithTab = () => {
       const hash = window.location.hash.replace('#', '').trim();
-      const path = window.location.pathname.replace('/', '').trim();
-      const route = hash || path;
+      const path = window.location.pathname.replace(/^\//, '').trim();
+      const rawRoute = hash || path;
 
-      if (!route) {
+      if (!rawRoute) {
         return;
       }
+
+      // Extract base route (e.g. 'onlinetraining' from 'onlinetraining?room=class_123')
+      const route = rawRoute.split('?')[0].split('#')[0].trim();
 
       if (validTabs.includes(route) || route.startsWith('dashboard-')) {
         setActiveTab(route);
